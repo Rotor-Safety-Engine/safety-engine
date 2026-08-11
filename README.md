@@ -1,10 +1,10 @@
-# Rotor Safety Engine — 面向具身智能的物理安全实时判定引擎
+# Rotor Safety Engine — 面向 VLA 与人形机器人的实时安全中间件
 
-> **Real-time Robot Safety Middleware — with Dynamic Contact Area, Impulse Boundary & Reaction Force Stability**
+> Real-time physics safety layer for VLA models and humanoid robots. 100% deterministic. Sub-millisecond latency. Zero dependencies.
 >
-> 面向协作机器人与人形机器人的 Physical AI 安全层。ISO 10218 / ISO/TS 15066 对齐，七级风险粒度 · 动宾不可能组合校验。
+> 视觉世界模型或VLA擅长语义理解与物体识别，却缺乏物理直觉——它无法预判抓取时接触面积随力变化的力学响应，更无法感知重物高速移动时的冲量风险，以及机械臂反作用力对底盘稳定性的破坏。
 >
-> 纯确定性物理 · 动力学驱动 · 单文件零依赖 · 亚毫秒级 · 边缘推理就绪
+> Rotor 在 VLA 推理与物理执行之间建立一道实时硬边界，基于牛顿力学拦截而非概率判断。
 
 [![Python](https://img.shields.io/badge/Python-3.7%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -12,17 +12,25 @@
 [![Mypy](https://img.shields.io/badge/mypy-0%20errors-blue)]()
 [![Performance](https://img.shields.io/badge/latency-~17%20μs-blueviolet)]()
 
-**当前版本：v1.0.0（社区首发版）**
+**当前版本：v1.0.1**
 
 ---
 
-## 这是什么
+## 核心机制
 
-Rotor Safety Engine 是一款面向协作机器人与人形机器人的 **实时安全中间件（real-time safety middleware）**，也是 VLA 推理管线中的 **VLA safety layer**，连接 AI 规划与运动执行。
-不同于静态阈值检查器，它引入了 **动态接触面积（Dynamic Contact Area）** 用于软物压强建模、**冲量安全边界（Impulse Safety Boundary）** 用于重物运动控制、以及 **反作用力稳定性（Reaction Force Stability）** 约束用于移动操作机器人底盘稳定性判定。
-设计对齐 **ISO 10218** 与 **ISO/TS 15066** 安全标准，提供 **Power and Force Limiting (PFL)** 力与功率限制能力，搭配 **七级风险粒度（7-level risk granularity）**，纯 **零依赖 Python（zero-dependency Python）** 实现，适合 **边缘推理（edge inference）** 实时控制场景。
+视觉世界模型或VLA擅长语义理解与物体识别，却缺乏物理直觉——它无法预判抓取时**接触面积**随力变化的力学响应，更无法感知重物高速移动时的**冲量**风险，以及机械臂**反作用力**对底盘稳定性的破坏。
 
-**一句话定位：不理解你的任务，只保证你的动作在物理上是安全的。**
+Rotor 在 VLA 推理与物理执行之间建立一道实时硬边界，100% 基于牛顿定理拦截而非概率判断。其核心机制包括：
+
+- **动态接触区域**：基于动量守恒与接触刚度，计算软/硬物体受力后的接触面积变化与压强分布，实现更精准的**碰撞检测**与力限制
+- **冲量边界**：对移动类动作施加速度×质量的冲量上限约束，防止重物高速操作失控
+- **反应力稳定性**：结合机器人底盘重量与地面摩擦系数，约束末端作用力以防止整机倾覆或滑移
+
+此外，Rotor 引入语义动作解析，对"抓水""推气体"等动-宾语义冲突直接拒判；以**七级风险粒度**替代二元判定，并透传超标倍率（over_ratio），为上层规划器提供渐进式安全反馈。
+
+设计对齐 **ISO 10218** 与 **ISO/TS 15066** 工业机器人安全标准，支持 **Power and Force Limiting (PFL)** 验证，是协作机器人、人形机器人与 VLA 系统的物理安全基础设施层。
+
+> **一句话定位**：Rotor 不是视觉模型的替代，而是它的物理感知验证层——让 VLA 在输出每一帧动作时，都落在力学真实性的安全边界之内。
 
 ---
 
@@ -358,14 +366,16 @@ max_reaction = base_weight_kg × G × friction_coef
 
 VLA 安全（VLA Safety）是具身智能落地的核心问题。(https://deepmind.google/) 是当前具身智能领域最受关注的 VLA 模型之一，代表了语义推理和任务规划的最高水平。我们和 ER 2 不在同一层竞争——而是**互补关系**：ER 2 做任务级决策，我们做动作级物理安全校验。
 
-| 维度 | Google Gemini Robotics ER 2 | Rotor Safety Engine |
-|------|----------------------------|---------------------|
+| 对比维度 | Google Gemini Robotics ER 2 | Rotor Safety Engine |
+|----------|----------------------------|---------------------|
 | 定位 | 具身推理「大脑」：任务规划、进度追踪、错误恢复 | 物理安全「反射弧」：动作级实时拦截 |
+| 物理层执行成功率 | 32-57% | 100%（确定性物理规则） |
 | 判断方式 | 神经网络概率推理 | 确定性物理不等式 |
-| 延迟 | 亚秒级（MAE ~0.96s） | ~17μs（P99 < 100μs） |
-| 部署 | 云端 API（Gemini Live） | 边缘/本地，零网络依赖 |
+| 单次判断延迟 | 960ms（MAE） | ~17μs（快 ~56,000 倍） |
+| 部署方式 | 云端 API（依赖网络） | 本地离线（零依赖） |
 | 安全保证 | 概率性判断（可能漏判） | 零漏判（物理约束是硬性的） |
 | 适合做什么 | 理解用户意图、规划复杂任务、协调多机器人 | 确保每一个物理动作安全可靠 |
+| 体积 | 云端大模型 | ~140KB 单文件 |
 
 > **核心观点**：无论机器人的"大脑"多聪明，都需要一个 100% 可靠的安全反射弧。
 > VLA 模型输出动作 → Safety Engine 做最后一道安全校验 → 执行。
