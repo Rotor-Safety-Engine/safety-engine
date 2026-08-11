@@ -1,0 +1,22 @@
+# GitHub Repository Configuration
+# 推送到 GitHub 时使用以下配置
+# 策略：6x + 6j 混排咬合，算法判定极度聚焦
+
+# === Repo Description (搜索结果最高权重位) ===
+# x+j+x 夹心结构：立品类 + 打差异 + 收标准
+Real-time safety middleware for collaborative robots & humanoids. Dynamic Contact Area, Impulse Boundary & Reaction Force Stability. ISO 10218 / TS 15066 aligned.
+
+# === Repository Topics (12个，6x+6j 交叉咬合) ===
+# x=同质化流量词, j=差异化独有词
+robot-safety
+dynamic-contact-area
+cobot
+impulse-check
+iso-15066
+reaction-force-stability
+humanoid-robot
+7-level-risk
+real-time
+verb-object-impossibility
+physical-ai
+power-and-force-limiting
