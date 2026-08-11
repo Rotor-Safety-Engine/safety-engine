@@ -27,7 +27,7 @@ v1.0.0 升级：
   5. SemanticParser / SafetyAdapter 实例属性化，支持多实例独立配置
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "Rotor Dynamics"
 
 import time
