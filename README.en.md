@@ -333,7 +333,7 @@ Grasp-type + hold-type + compound-type.
 
 ---
 
-## Relationship with VLA Models
+## Relationship with VLA Models (VLA Safety Layer)
 
 ```
   User command
@@ -354,9 +354,9 @@ Grasp-type + hold-type + compound-type.
 
 ---
 
-## Relationship with Google Gemini Robotics ER 2
+## Relationship with Google Gemini Robotics ER 2 (VLA Safety Comparison)
 
-[Google Gemini Robotics ER 2](https://deepmind.google/) is one of the most capable VLA models in embodied AI today, representing state-of-the-art in semantic reasoning and task planning. We do not compete with ER 2 at the same layer — we are **complementary**: ER 2 makes task-level decisions, we provide action-level physical safety checks.
+VLA safety is the core challenge in embodied AI deployment.(https://deepmind.google/) is one of the most capable VLA models in embodied AI today, representing state-of-the-art in semantic reasoning and task planning. We do not compete with ER 2 at the same layer — we are **complementary**: ER 2 makes task-level decisions, we provide action-level physical safety checks.
 
 | Dimension | Google Gemini Robotics ER 2 | Rotor Safety Engine |
 |-----------|----------------------------|---------------------|

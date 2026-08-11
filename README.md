@@ -333,7 +333,7 @@ max_reaction = base_weight_kg × G × friction_coef
 
 ---
 
-## 与 VLA 模型的关系
+## 与 VLA 模型的关系（VLA Safety 安全层）
 
 ```
   用户指令
@@ -354,9 +354,9 @@ max_reaction = base_weight_kg × G × friction_coef
 
 ---
 
-## 与 Google Gemini Robotics ER 2 的关系
+## 与 Google Gemini Robotics ER 2 的关系（VLA 安全对比）
 
-[Google Gemini Robotics ER 2](https://deepmind.google/) 是当前具身智能领域最受关注的 VLA 模型之一，代表了语义推理和任务规划的最高水平。我们和 ER 2 不在同一层竞争——而是**互补关系**：ER 2 做任务级决策，我们做动作级物理安全校验。
+VLA 安全（VLA Safety）是具身智能落地的核心问题。(https://deepmind.google/) 是当前具身智能领域最受关注的 VLA 模型之一，代表了语义推理和任务规划的最高水平。我们和 ER 2 不在同一层竞争——而是**互补关系**：ER 2 做任务级决策，我们做动作级物理安全校验。
 
 | 维度 | Google Gemini Robotics ER 2 | Rotor Safety Engine |
 |------|----------------------------|---------------------|
