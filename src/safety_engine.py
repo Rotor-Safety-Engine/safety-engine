@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Rotor Safety Engine v4.3.0 — Real-time Robot Safety Middleware
+"""Rotor Safety Engine v1.0.0 — Real-time Robot Safety Middleware
 物理层运行时安全中间件 · 协作机器人安全 · ISO 10218 / ISO/TS 15066
 
 Core technologies:
@@ -18,7 +18,7 @@ Features:
   - Sub-millisecond latency (~17μs) · edge inference ready
   - Deterministic physics · zero neural networks · 100% interpretable
 
-v4.3.0 升级：
+v1.0.0 升级：
   1. typing 完善：所有公共方法补全类型注解
   2. 公共逻辑抽取：_build_result 私有方法消除重复代码
   3. 输入参数校验：类型/范围/NaN/越界全面检查，新增 input_warnings 字段
@@ -27,7 +27,7 @@ v4.3.0 升级：
   5. SemanticParser / SafetyAdapter 实例属性化，支持多实例独立配置
 """
 
-__version__ = "4.3.0"
+__version__ = "1.0.0"
 __author__ = "Rotor Dynamics"
 
 import time
@@ -696,7 +696,7 @@ class V4Result:
     retreat_params: Optional[Dict] = None
     # 语义合理性分数透传（外部传入，原样回传）
     semantic_plausibility_score: Optional[float] = None
-    # === v4.3.0 新增字段 ===
+    # === v1.0.0 新增字段 ===
     # 输入层面的非致命警告列表
     input_warnings: List[str] = field(default_factory=list)
     # === v4.2.3 新增字段 ===
@@ -728,7 +728,7 @@ class V4Result:
             "semantic_plausibility_score": self.semantic_plausibility_score,
             # === v4.2.3 新增字段 ===
             "over_ratio": round(self.over_ratio, 4),
-            # === v4.3.0 新增字段 ===
+            # === v1.0.0 新增字段 ===
             "input_warnings": self.input_warnings,
         }
 
@@ -740,7 +740,7 @@ class V4Result:
 class SemanticParser:
     """语义解析：中文 → 标准key + 属性查询
 
-    v4.3.0: 支持通过构造函数注入 verb_db / object_db / action_rules，
+    v1.0.0: 支持通过构造函数注入 verb_db / object_db / action_rules，
             不传则使用全局默认值（保持向后兼容）。
     """
 
@@ -1941,14 +1941,14 @@ def load_action_rules(json_path: str) -> Dict[str, Dict[str, Dict[str, Any]]]:
 
 class SafetyEngineV4:
     """
-    Rotor Safety Engine v4.3.0
+    Rotor Safety Engine v1.0.0
 
     模式A: check_command(action, obj, params, ...)  — 自然语言
     模式B: check_action(scene, action, robot)        — JSON参数
     """
 
     # === 版本号 ===
-    VERSION = "4.3.0"
+    VERSION = "1.0.0"
 
     # === v4.2.3 新增：七级风险分级规则（与 map_risk_level_7 完全一致）===
     # PASS 样本：基于 safety_margin 分档

@@ -6,7 +6,7 @@
 >
 > Deterministic Physics · Zero-dependency Python · Sub-millisecond · Edge Inference Ready
 
-**Current Version: v4.3.0 (Community Edition)**
+**Current Version: v1.0.0 (Community First Release)**
 
 [![Python](https://img.shields.io/badge/Python-3.7%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -30,7 +30,7 @@ Aligned with **ISO 10218** and **ISO/TS 15066**, it delivers **Power and Force L
 
 | Feature | Community Edition | Pro Edition |
 |---------|------------------|-------------|
-| Version | v4.3.0 | v4.3.1+ |
+| Version | v1.0.0 | v1.1.0+ |
 | 4-layer safety verdict | ✅ | ✅ |
 | **Dynamic Contact Area** | ✅ | ✅ |
 | **Impulse Safety Boundary** | ✅ | ✅ |
@@ -198,7 +198,7 @@ print(result["pressure_kPa"])        # Contact pressure
 print(result["contact_area_mm2"])    # Dynamic contact area
 ```
 
-### Custom data configuration (v4.3.0+)
+### Custom data configuration (v1.0.0+)
 
 Verb database, object database, and action rules can be loaded from external JSON files — no source code changes needed for business customization:
 
@@ -434,7 +434,7 @@ JSON parameter mode input (production recommended, best performance).
 | `action_data` | `Dict` | Action data: `type` / `force_n` / `velocity_ms` / `target_object` |
 | `robot_data` | `Dict` | Robot capability data |
 
-### Input Validation (v4.3.0+)
+### Input Validation (v1.0.0+)
 
 The engine automatically performs input validation at the entry point:
 
@@ -512,7 +512,7 @@ The engine automatically performs input validation at the entry point:
 - [x] v4.1 — Evaluation improvements & performance optimization
 - [x] v4.2 — Physics 3-layer structure upgrade (dynamic contact area + impulse + reaction force)
 - [x] v4.2.x — Quality fixes & 7-level risk grading
-- [x] v4.3.0 — Quality enhancement: typing / external config / input validation / common logic extraction
+- [x] v1.0.0 — First public release: quality enhancements: typing / external config / input validation / common logic extraction
 - [ ] More verb extensions
 - [ ] Multi-object interaction support
 - [ ] Continuous motion trajectory safety validation
