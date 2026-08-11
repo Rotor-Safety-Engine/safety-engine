@@ -354,6 +354,27 @@ Grasp-type + hold-type + compound-type.
 
 ---
 
+## Relationship with Google Gemini Robotics ER 2
+
+[Google Gemini Robotics ER 2](https://deepmind.google/) is one of the most capable VLA models in embodied AI today, representing state-of-the-art in semantic reasoning and task planning. We do not compete with ER 2 at the same layer — we are **complementary**: ER 2 makes task-level decisions, we provide action-level physical safety checks.
+
+| Dimension | Google Gemini Robotics ER 2 | Rotor Safety Engine |
+|-----------|----------------------------|---------------------|
+| Role | Embodied reasoning "brain": task planning, progress tracking, error recovery | Physical safety "reflex arc": real-time action-level interception |
+| Method | Neural network probabilistic reasoning | Deterministic physics inequalities |
+| Latency | Sub-second (MAE ~0.96s) | ~17μs (P99 < 100μs) |
+| Deployment | Cloud API (Gemini Live) | Edge / on-premise, zero network dependency |
+| Safety guarantee | Probabilistic (may miss edge cases) | Zero misses (physical constraints are hard bounds) |
+| Best for | Understanding user intent, planning complex tasks, multi-robot coordination | Ensuring every physical action is safe and reliable |
+
+> **Core insight**: No matter how smart a robot's "brain" is, it needs a 100% reliable safety reflex arc.
+> VLA model outputs action → Safety Engine does final safety validation → Execution.
+> ER 2 is the company's CEO (making decisions); we're the safety officer (with veto power).
+
+**Value for ER 2 users**: If your robot runs on ER 2 or any similar VLA model, integrating Safety Engine gives you a deterministic physical safety layer without changing the upstream model — addressing the inherent limitations of probabilistic reasoning in safety-critical scenarios.
+
+---
+
 ## Deployment
 
 ### Edge Devices
