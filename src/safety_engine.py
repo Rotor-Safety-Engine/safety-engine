@@ -815,7 +815,6 @@ class SemanticParser:
                 "fluid": 0.0, "human_contact": 0.1, "mass_kg": 0.3, "weight_est": 0.3, "contact_area_mm2": 400, "contact_stiffness": 3.0, "max_deform": 0.1}
 
     @staticmethod
-    @staticmethod
     def get_robot_cap(robot: str) -> Dict[str, Any]:
         result = ROBOT_CAPABILITIES.get(robot) or ROBOT_CAPABILITIES.get("humanoid_basic")
         return result  # type: ignore[return-value]  # type: ignore[return-value]
@@ -853,11 +852,9 @@ class SemanticParser:
         return next(iter(action_rules.values()))
 
     @staticmethod
-    @staticmethod
     def check_impossible(action_key: str, category: str) -> bool:
         return category in IMPOSSIBLE_PAIRS.get(action_key, set())
 
-    @staticmethod
     @staticmethod
     def compute_safety_zone(params: Dict[str, Any], rules: Dict[str, Any]) -> Dict[str, Any]:
         force = abs(float(params.get("force", 0)))
@@ -891,7 +888,6 @@ class SemanticParser:
                 "in_safety_zone": in_gz, "safety_margin": round(margin, 3)}
 
     @staticmethod
-    @staticmethod
     def recommend_params(rules: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         f = rules["force"][1]
         s = rules["speed"][1]
@@ -903,7 +899,6 @@ class SemanticParser:
     # ---------------------------------------------------------------------
     # v4.2.2 新增：七级风险等级映射
     # ---------------------------------------------------------------------
-    @staticmethod
     @staticmethod
     def map_risk_level_7(verdict: str, margin: float, score: float) -> str:
         """
