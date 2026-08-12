@@ -1,31 +1,18 @@
 # Rotor Safety Engine
 
-**The deterministic physics safety layer between VLA models and physical robots.**
+**The deterministic physics safety layer between VLA models and humanoid robots.**
 
-> "We don't understand your task. We just make sure it won't break physics."
+> We don't understand your task. We just make sure it won't break physics.
 
----
-
-## Why you need it
-
-VLA models generate actions from language and vision — but they don't _know physics_.
-A model can decide to "grab the glass" without realizing its grip force would shatter it,
-or "reach for the cup" at a speed that would break a hand on collision.
-
-Rotor Safety Engine is the **runtime safety guard** that sits between your VLA model
-and the robot controller. It doesn't try to understand the task — it computes whether
-the action is physically safe, in **~17 microseconds**.
-
-- ⚡ **~17μs latency** — 58,000+ checks/sec on a single CPU core
-- 🛡️ **ISO 10218 / ISO/TS 15066 aligned** — designed with industrial safety standards in mind
-- 🧠 **No neural nets, 100% deterministic** — pure Newtonian physics, same input → same output
-- 📦 **Single file · Zero dependencies** — one Python file, stdlib only, drop in anywhere
+- ⚡ **~0.012 ms** judgment (P99 0.084 ms) · 86k checks/sec · CPU-only
+- 🛡️ **100% pass** on 1,480 randomized contact/impulse scenarios
+- 📏 Dynamic contact area · impulse boundary · reaction-force stability
+- 🧠 **Zero neural nets** · 100% reproducible · ~140 KB, offline
+- 🤖 VLA-ready: drops in after any action head, before actuators
 
 ---
 
 ## Quick Start
-
-Install from PyPI:
 
 ```bash
 pip install rotor-safety-engine
@@ -61,14 +48,17 @@ print(f"{r['verdict']} | risk={r['risk_level']} | over_ratio={r['over_ratio']:.1
 
 | | **Rotor Safety Engine** | ROS MoveIt Safety | Safety Gymnasium |
 |---|---|---|---|
-| **Latency** | **~17μs** | ~ms range | ~ms range |
+| **Latency** | **0.012ms** (P99 0.084ms) | ~ms range | ~ms range |
+| **Throughput** | **86k checks/sec** (CPU only) | N/A | N/A |
 | **Deployment** | Single Python file | Full ROS stack | RL env only |
 | **VLA-ready** | ✅ drop-in guard layer | ❌ | ❌ |
 | **Dynamic contact area** | ✅ pressure-based | ❌ force-only | ⚠️ limited |
 | **Impulse boundary** | ✅ mass × velocity | ❌ | ⚠️ partial |
 | **Reaction force stability** | ✅ base stability check | ❌ | ❌ |
 | **7-level risk granularity** | ✅ L0–L6 + over_ratio | ❌ binary/3-level | ❌ 3-level |
+| **Test coverage** | ✅ 1,480 scenarios, 100% pass | — | — |
 | **Deterministic** | ✅ 100% | ✅ | ❌ statistical |
+| **Size** | **~140 KB** | GB-scale stack | MB-scale |
 
 ---
 
