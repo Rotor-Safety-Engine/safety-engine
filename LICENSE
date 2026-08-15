@@ -19,16 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-## ADDITIONAL SAFETY DISCLAIMER
-
-This software is a research-grade open-source project and is NOT certified for
-use in safety-critical applications, production environments, or any system
-where human safety may be at risk. The user assumes all responsibility and risk
-for the use of this software. The authors and contributors shall not be liable
-for any damages, injuries, or losses arising from its use in any context.
-
-This software has NOT been certified against ISO 13482, ISO 10218, ISO/TS 15066,
-IEC 61508, or any other functional safety standard.
