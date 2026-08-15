@@ -29,7 +29,13 @@ from safety_engine import (
 # Fixtures
 # =====================================================================
 
-import pytest
+try:
+    import pytest
+except ImportError:
+    raise ImportError(
+        "pytest 未安装。请运行: pip install pytest\n"
+        "或使用: pytest tests/test_engine.py -v"
+    )
 
 
 @pytest.fixture
@@ -379,7 +385,7 @@ class TestPerformance:
             engine.check_command("grasp", "鸡蛋", {"force": 2.0, "speed": 0.03}, robot=test_robot)
         elapsed = time.perf_counter() - t0
         avg_ms = elapsed / N * 1000
-        assert avg_ms < 0.15, f"平均延迟 {avg_ms:.4f}ms 超过 0.15ms 限制"
+        assert avg_ms < 0.1, f"平均延迟 {avg_ms:.4f}ms 超过 0.1ms 限制"
 
 
 # =====================================================================
