@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 import os
 
 # Read version from source
-version = "4.3.0"
+version = "1.1.0"
 
 # Read README
 here = os.path.abspath(os.path.dirname(__file__))
