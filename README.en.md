@@ -1,36 +1,27 @@
-# Rotor Safety Engine — Real-time safety middleware for VLA and humanoid robots
+# Rotor Safety Engine
 
-> Real-time physics safety layer for VLA models and humanoid robots. 100% deterministic. Sub-millisecond latency. Zero dependencies.
+> **Real-time Robot Safety Middleware — with Dynamic Contact Area, Impulse Boundary & Reaction Force Stability**
 >
-> Vision world models and VLA systems excel at semantic understanding and object recognition — but they lack physical intuition. They cannot predict how contact area changes with force during a grasp, nor perceive the impulse risk of moving heavy objects at high speed, or how reaction forces destabilize a mobile base.
+> Physical AI safety layer for collaborative robots & humanoids. ISO 10218 / ISO/TS 15066 aligned. 7-Level Risk Granularity · Verb-Object Impossibility guard.
 >
-> Rotor places a real-time hard boundary between VLA reasoning and physical execution — intercepting unsafe actions based on Newtonian mechanics, not probabilistic judgment.
+> Deterministic Physics · Zero-dependency Python · Sub-millisecond · Edge Inference Ready
 
-**Current Version: v1.0.1**
+**Current Version: v4.3.0 (Community Edition)**
 
 [![Python](https://img.shields.io/badge/Python-3.7%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-349%20passed-brightgreen)]()
-[![Mypy](https://img.shields.io/badge/mypy-0%20errors-blue)]()
 [![Performance](https://img.shields.io/badge/latency-~17%20μs-blueviolet)]()
 
 ---
 
-## Core Mechanism
+## What is this
 
-Vision world models and VLA systems excel at semantic understanding and object recognition — but they lack physical intuition. They cannot predict how **contact area** changes with force during a grasp, nor perceive the **impulse** risk of moving heavy objects at high speed, or how **reaction force** destabilizes a mobile base.
+Rotor Safety Engine is a **real-time safety middleware** for collaborative robots and humanoid platforms — a **VLA safety layer** that sits between AI planning and motion execution.
+Unlike static threshold checkers, it introduces **Dynamic Contact Area** for soft-object pressure modeling, **Impulse Safety Boundaries** for heavy-load motion control, and **Reaction Force Stability** constraints for mobile manipulator bases.
+Aligned with **ISO 10218** and **ISO/TS 15066**, it delivers **Power and Force Limiting (PFL)** with **7-level risk granularity** in pure **zero-dependency Python** — ready for **edge inference** in real-time control loops.
 
-Rotor places a real-time hard boundary between VLA reasoning and physical execution — 100% Newtonian-mechanics interception, not probability. Core mechanisms:
-
-- **Dynamic Contact Area**: Based on momentum conservation and contact stiffness, calculates contact area deformation and pressure distribution for soft/hard objects — enabling more accurate **collision detection** and force limiting
-- **Impulse Boundary**: Enforces velocity × mass impulse upper bounds on motion actions, preventing heavy-load operations from going out of control
-- **Reaction Force Stability**: Constraints end-effector forces based on chassis weight and ground friction coefficient, preventing tip-over or slippage
-
-Additionally, Rotor introduces semantic action parsing that directly rejects verb-object impossibility combinations (e.g. "grasp water", "push gas"); uses **7-level risk grading** instead of binary pass/fail; and returns over_ratio values to give the upstream planner progressive safety feedback.
-
-Designed in alignment with **ISO 10218** and **ISO/TS 15066** industrial robot safety standards, supporting **Power and Force Limiting (PFL)** validation — the physical safety infrastructure layer for collaborative robots, humanoid robots, and VLA systems.
-
-> **One-liner**: Rotor is not a replacement for vision models — it's their physical perception validation layer, ensuring every action a VLA outputs stays within the safety bounds of mechanical reality.
+**One-liner: We don't understand your task — we just make sure your action is physically safe.**
 
 ---
 
@@ -38,7 +29,7 @@ Designed in alignment with **ISO 10218** and **ISO/TS 15066** industrial robot s
 
 | Feature | Community Edition | Pro Edition |
 |---------|------------------|-------------|
-| Version | v1.0.0 | v1.1.0+ |
+| Version | v4.3.0 | v4.3.1+ |
 | 4-layer safety verdict | ✅ | ✅ |
 | **Dynamic Contact Area** | ✅ | ✅ |
 | **Impulse Safety Boundary** | ✅ | ✅ |
@@ -139,12 +130,7 @@ pip install rotor-safety-engine
 # Option 2: Install latest from GitHub
 pip install git+https://github.com/rotor-dynamics/safety-engine.git
 
-# Option 3: Editable install (for development / contributing)
-git clone https://github.com/rotor-dynamics/safety-engine.git
-cd safety-engine
-pip install -e .
-
-# Option 4: Single file — just copy it
+# Option 3: Single file — just copy it
 cp src/safety_engine.py your_project/
 ```
 
@@ -206,7 +192,7 @@ print(result["pressure_kPa"])        # Contact pressure
 print(result["contact_area_mm2"])    # Dynamic contact area
 ```
 
-### Custom data configuration (v1.0.0+)
+### Custom data configuration (v4.3.0+)
 
 Verb database, object database, and action rules can be loaded from external JSON files — no source code changes needed for business customization:
 
@@ -286,7 +272,7 @@ The engine uses a 7-level risk scale (L0–L6), with different criteria for PASS
 
 ### 3-Layer Force Constraint Model
 
-Derived from momentum-energy dual conservation. Force safety is determined by three layers of constraints, taking the strictest:
+Force safety is determined by three layers of constraints, taking the strictest:
 
 1. **Output constraint** — Robot output capability limit (motor / joint limit)
 2. **Receive constraint** — Object mechanical response limit (material / structure, including dynamic contact area, impulse, pressure)
@@ -341,7 +327,7 @@ Grasp-type + hold-type + compound-type.
 
 ---
 
-## Relationship with VLA Models (VLA Safety Layer)
+## Relationship with VLA Models
 
 ```
   User command
@@ -359,29 +345,6 @@ Grasp-type + hold-type + compound-type.
 - VLA models handle **intent understanding & action planning**
 - Safety Engine handles **physical safety validation**
 - Two layers work in parallel, complementary not overlapping
-
----
-
-## Relationship with Google Gemini Robotics ER 2 (VLA Safety Comparison)
-
-VLA safety is the core challenge in embodied AI deployment.(https://deepmind.google/) is one of the most capable VLA models in embodied AI today, representing state-of-the-art in semantic reasoning and task planning. We do not compete with ER 2 at the same layer — we are **complementary**: ER 2 makes task-level decisions, we provide action-level physical safety checks.
-
-| Dimension | Google Gemini Robotics ER 2 | Rotor Safety Engine |
-|-----------|----------------------------|---------------------|
-| Role | Embodied reasoning "brain": task planning, progress tracking, error recovery | Physical safety "reflex arc": real-time action-level interception |
-| Physical execution success rate | 32-57% | 100% (deterministic physics rules) |
-| Method | Neural network probabilistic reasoning | Deterministic physics inequalities |
-| Inference latency | 960ms (MAE) | ~17μs (~56,000× faster) |
-| Deployment | Cloud API (network required) | On-device / offline, zero dependencies |
-| Safety guarantee | Probabilistic (may miss edge cases) | Zero misses (physical constraints are hard bounds) |
-| Best for | Understanding user intent, planning complex tasks, multi-robot coordination | Ensuring every physical action is safe and reliable |
-| Footprint | Cloud-scale model | ~140KB, single file |
-
-> **Core insight**: No matter how smart a robot's "brain" is, it needs a 100% reliable safety reflex arc.
-> VLA model outputs action → Safety Engine does final safety validation → Execution.
-> ER 2 is the company's CEO (making decisions); we're the safety officer (with veto power).
-
-**Value for ER 2 users**: If your robot runs on ER 2 or any similar VLA model, integrating Safety Engine gives you a deterministic physical safety layer without changing the upstream model — addressing the inherent limitations of probabilistic reasoning in safety-critical scenarios.
 
 ---
 
@@ -465,7 +428,7 @@ JSON parameter mode input (production recommended, best performance).
 | `action_data` | `Dict` | Action data: `type` / `force_n` / `velocity_ms` / `target_object` |
 | `robot_data` | `Dict` | Robot capability data |
 
-### Input Validation (v1.0.0+)
+### Input Validation (v4.3.0+)
 
 The engine automatically performs input validation at the entry point:
 
@@ -543,37 +506,13 @@ The engine automatically performs input validation at the entry point:
 - [x] v4.1 — Evaluation improvements & performance optimization
 - [x] v4.2 — Physics 3-layer structure upgrade (dynamic contact area + impulse + reaction force)
 - [x] v4.2.x — Quality fixes & 7-level risk grading
-- [x] v1.0.0 — First public release: quality enhancements: typing / external config / input validation / common logic extraction
+- [x] v4.3.0 — Quality enhancement: typing / external config / input validation / common logic extraction
 - [ ] More verb extensions
 - [ ] Multi-object interaction support
 - [ ] Continuous motion trajectory safety validation
 - [ ] ROS / ROS2 integration package
 - [ ] C++ / Rust version
 - [ ] **Pro Edition Layer 5 Mechanics Enhancement** (commercial license)
-
----
-
-## Development
-
-### Running Tests
-
-```bash
-pip install pytest pytest-cov
-pytest tests/ -v --cov=safety_engine
-```
-
-### Type Checking
-
-The codebase passes strict mypy type checking:
-
-```bash
-pip install mypy
-mypy src/safety_engine.py --ignore-missing-imports
-```
-
-### CI/CD
-
-GitHub Actions runs the full test suite on every push and pull request across Python 3.8–3.12. See `.github/workflows/pytest.yml` for details.
 
 ---
 
@@ -592,19 +531,6 @@ GitHub Actions runs the full test suite on every push and pull request across Py
 
 **🏆 Exclusive Features**
 `Dynamic Contact Area` · `Impulse Safety Boundary` · `Reaction Force Stability` · `7-Level Risk Granularity` · `Verb-Object Impossibility` · `Over-Ratio Metric`
-
----
-
-## ⚠️ Safety Disclaimer (Important)
-
-Rotor Safety Engine Community Edition is a **research-grade open-source middleware** intended for technical reference and educational purposes. It is **not a certified functional safety product** and has not been officially certified against ISO 13482, ISO 10218, IEC 61508, or any other safety standard.
-
-- **For R&D and prototyping only.** Do not use in production environments, human-in-the-loop systems, or any scenario where human safety may be at risk.
-- Anyone deploying, modifying, or commercializing this software assumes full safety responsibility and must engage qualified third-party institutions for required safety certification and risk assessment.
-- This software is provided "AS IS" without warranty of any kind, including implied warranties of merchantability, fitness for a particular purpose, and non-infringement.
-- In no event shall the authors or contributors be liable for any claim, damages, or other liability arising from the use of this software.
-
-For production deployments, contact us at `contact@rotor-dynamics.ai` for enterprise licensing.
 
 ---
 
