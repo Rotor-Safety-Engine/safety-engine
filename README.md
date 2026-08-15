@@ -1,68 +1,78 @@
-# Rotor Safety Engine
+# Rotor Safety Engine — 面向具身智能的物理安全实时判定引擎
 
-**The deterministic physics safety layer between VLA models and humanoid robots.**
+> **Real-time Robot Safety Middleware — with Dynamic Contact Area, Impulse Boundary & Reaction Force Stability**
+>
+> 面向协作机器人与人形机器人的 Physical AI 安全层。ISO 10218 / ISO/TS 15066 对齐，七级风险粒度 · 动宾不可能组合校验。
+>
+> 纯确定性物理 · 动力学驱动 · 单文件零依赖 · 亚毫秒级 · 边缘推理就绪
 
-> We don't understand your task. We just make sure it won't break physics.
-
-- ⚡ **~0.012 ms** judgment (P99 0.084 ms) · 86k checks/sec · CPU-only
-- 🛡️ **100% pass** on 1,480 randomized contact/impulse scenarios
-- 📏 Dynamic contact area · impulse boundary · reaction-force stability
-- 🧠 **Zero neural nets** · 100% reproducible · ~140 KB, offline
-- 🤖 VLA-ready: drops in after any action head, before actuators
+**当前版本：v4.3.0（社区版）**
 
 ---
 
-## Quick Start
+## 这是什么
 
-```bash
-pip install rotor-safety-engine
-```
+Rotor Safety Engine 是一款面向协作机器人与人形机器人的 **实时安全中间件（real-time safety middleware）**，也是 VLA 推理管线中的 **VLA safety layer**，连接 AI 规划与运动执行。
+不同于静态阈值检查器，它引入了 **动态接触面积（Dynamic Contact Area）** 用于软物压强建模、**冲量安全边界（Impulse Safety Boundary）** 用于重物运动控制、以及 **反作用力稳定性（Reaction Force Stability）** 约束用于移动操作机器人底盘稳定性判定。
+设计对齐 **ISO 10218** 与 **ISO/TS 15066** 安全标准，提供 **Power and Force Limiting (PFL)** 力与功率限制能力，搭配 **七级风险粒度（7-level risk granularity）**，纯 **零依赖 Python（zero-dependency Python）** 实现，适合 **边缘推理（edge inference）** 实时控制场景。
 
-Or just copy the single file:
-
-```bash
-curl -O https://raw.githubusercontent.com/Rotor-Safety-Engine/safety-engine/main/src/safety_engine.py
-```
-
-### 30-second demo
-
-```python
-from safety_engine import SafetyEngineV4
-
-engine = SafetyEngineV4()
-
-# Safe grasp → PASS
-r = engine.check_command("grasp", "egg", params={"force": 2.0, "speed": 0.03}, robot="humanoid_basic")
-print(f"{r['verdict']} | risk={r['risk_level']} | pressure={r['physics']['pressure_kpa']:.1f}kPa")
-# ✅ PASS | risk=LOW | pressure=12.3kPa
-
-# Dangerous force → FAIL
-r = engine.check_command("grasp", "glass_panel", params={"force": 80.0, "speed": 0.5}, robot="humanoid_basic")
-print(f"{r['verdict']} | risk={r['risk_level']} | over_ratio={r['over_ratio']:.1f}x")
-# ❌ FAIL | risk=HIGH | over_ratio=2.3x
-```
+**一句话定位：不理解你的任务，只保证你的动作在物理上是安全的。**
 
 ---
 
-## How is this different?
+## 版本选择
 
-| | **Rotor Safety Engine** | ROS MoveIt Safety | Safety Gymnasium |
-|---|---|---|---|
-| **Latency** | **0.012ms** (P99 0.084ms) | ~ms range | ~ms range |
-| **Throughput** | **86k checks/sec** (CPU only) | N/A | N/A |
-| **Deployment** | Single Python file | Full ROS stack | RL env only |
-| **VLA-ready** | ✅ drop-in guard layer | ❌ | ❌ |
-| **Dynamic contact area** | ✅ pressure-based | ❌ force-only | ⚠️ limited |
-| **Impulse boundary** | ✅ mass × velocity | ❌ | ⚠️ partial |
-| **Reaction force stability** | ✅ base stability check | ❌ | ❌ |
-| **7-level risk granularity** | ✅ L0–L6 + over_ratio | ❌ binary/3-level | ❌ 3-level |
-| **Test coverage** | ✅ 1,480 scenarios, 100% pass | — | — |
-| **Deterministic** | ✅ 100% | ✅ | ❌ statistical |
-| **Size** | **~140 KB** | GB-scale stack | MB-scale |
+| 功能 | 社区版（Community） | 企业版（Pro） |
+|------|-------------------|--------------|
+| 版本 | v4.3.0 | v4.3.1+ |
+| 四层安全判定 | ✅ | ✅ |
+| **动态接触面积（Dynamic Contact Area）** | ✅ | ✅ |
+| **冲量安全边界（Impulse Safety Boundary）** | ✅ | ✅ |
+| **反作用力稳定性（Reaction Force Stability）** | ✅ | ✅ |
+| **七级风险粒度（7-Level Risk Granularity）** | ✅ | ✅ |
+| 超标倍率（over_ratio） | ✅ | ✅ |
+| 回退参数推荐（retreat_params） | ✅ | ✅ |
+| 语义合理性分（semantic_plausibility） | ✅ | ✅ |
+| **动-宾不可能组合（Verb-Object Impossibility）** | ✅ | ✅ |
+| ISO 合规标注 | ✅ | ✅ |
+| **作用-反作用完整对（3D向量）** | — | ✅ |
+| **动量-冲量-时间链路分析** | — | ✅ |
+| **旋转矩阵方向向量（rotation_matrix）** | — | ✅ |
+| **Stribeck 静动摩擦曲线** | — | ✅ |
+| **接触时间物理推导** | — | ✅ |
+| **能量守恒校验（Work = F × d）** | — | ✅ |
+| **纯函数力学分析接口（pure_analyze）** | — | ✅ |
+| **世界模型力学校验能力** | — | ✅ |
+| 开源协议 | MIT | 商业授权 |
+| 适用场景 | 研发、原型、教育 | 生产、工业、世界模型 |
+
+> **企业版咨询**：contact@rotor-dynamics.ai
 
 ---
 
-## 五层安全架构
+## 核心特性（社区版）
+
+- ⚡ **亚毫秒级延迟 · 实时安全看门狗** — Python 版平均 ~17μs，单线程吞吐量 ~6 万次/秒，**边缘推理**实时控制场景就绪
+- 🎯 **Physical AI · 100% 可解释** — 纯物理不等式 + 确定性规则，**动力学驱动**，面向人形机器人与协作机器人安全，零神经网络，零黑盒
+- 📦 **单文件 · 零依赖** — 一个 Python 文件，仅用标准库，直接嵌入任何管线
+- 🏗️ **四层安全架构** — 语义解析 → 安全适配 → 动作分类 → 综合决策
+- 🤖 **35+ 中文动词支持** — 抓取/握持/推拉/插拔/拧转/按压……自然语言模式开箱即用
+- 📏 **ISO 标准参考** — 设计对齐 ISO 10218 / ISO/TS 15066，人体接触场景自动标注
+- 🎛️ **两种输入模式** — 自然语言模式（接 VLA 输出）+ JSON 参数模式（接控制器）
+
+### 🔬 独家技术亮点
+
+- **🟢 动态接触面积（Dynamic Contact Area）** — 根据 force / stiffness 实时计算接触面积与压强，而非将面积视为常量；可区分"面包压手"与"铁块砸手"的本质差异
+- **🟡 冲量安全边界（Impulse Safety Boundary）** — 引入动量（mass × velocity）判定，区分 grasp（轻冲量）与 carry（重冲量）阈值，防止高速移重物侧翻
+- **🔴 反作用力稳定性（Reaction Force Stability）** — 将底盘稳定性纳入安全判定（base_weight × g × friction），机械臂力过大可能推倒自身时直接判 FAIL，适配移动操作机器人（Mobile Manipulator）
+- **📊 七级风险粒度（7-Level Risk Granularity）** — L0～L6 细粒度分级 + over_ratio（超标倍率），破除传统 Low/Medium/High 三档的粗糙划分
+- **🧠 动-宾不可能组合（Verb-Object Impossibility）** — 语义知识图谱硬编码常识壁垒（如 grasp + fluid → REJECT），纯物理引擎做不到的"常识推理"第一道防线
+- 🔌 **外部数据配置** — 动词库/物体库/规则表支持 JSON 文件加载，业务定制无需改源码
+- 🛡️ **健壮输入校验** — 类型/范围/NaN 全面校验，非法输入优雅降级，附带 input_warnings 诊断
+
+---
+
+## 四层安全架构
 
 ```
 输入（动作 + 物体 + 参数）
@@ -96,17 +106,11 @@ print(f"{r['verdict']} | risk={r['risk_level']} | over_ratio={r['over_ratio']:.1
 │ Layer 4  综合决策层       │
 │  PASS / FAIL / REJECT    │
 │  全量输出 + 修正建议      │
-│  ISO 合规标注            │
-└───────────┬──────────────┘
-            │
-            ▼
-┌──────────────────────────┐
-│ Layer 5  力学增强层 v4.3  │
-│  作用-反作用完整对         │
-│  动量-冲量-时间链路        │
-│  （能量守恒待后续版本）    │
+│  ISO 合规标注 · 七级风险  │
 └──────────────────────────┘
 ```
+
+> 企业版额外提供 **Layer 5 力学增强层**（作用-反作用 / 动量-冲量 / 能量守恒），详见版本对比。
 
 ---
 
@@ -115,7 +119,13 @@ print(f"{r['verdict']} | risk={r['risk_level']} | over_ratio={r['over_ratio']:.1
 ### 安装
 
 ```bash
-# 单文件，直接拷走即可
+# 方式 1：pip 安装（推荐）
+pip install rotor-safety-engine
+
+# 方式 2：从 GitHub 安装最新版
+pip install git+https://github.com/rotor-dynamics/safety-engine.git
+
+# 方式 3：单文件，直接拷走即可
 cp src/safety_engine.py your_project/
 ```
 
@@ -132,13 +142,16 @@ result = engine.check_command("抓取", "鸡蛋",
                               robot="humanoid_basic")
 print(result["verdict"])      # PASS
 print(result["risk_level"])   # LOW
+print(result["risk_level_7"]) # L1
 
 # 力太大 → FAIL
 result = engine.check_command("抓", "玻璃面板",
                               params={"force": 80.0, "speed": 0.5},
                               robot="humanoid_basic")
-print(result["verdict"])      # FAIL
-print(result["correction"])   # 参数不安全: ...
+print(result["verdict"])       # FAIL
+print(result["correction"])    # 参数不安全: ...
+print(result["over_ratio"])    # 超标倍率
+print(result["recommended_params_v2"])  # 推荐安全参数
 ```
 
 ### 基本使用 — JSON 参数模式（生产推荐）
@@ -171,6 +184,28 @@ robot = {
 result = engine.check_action(scene, action, robot)
 print(result["verdict"])       # PASS
 print(result["pressure_kPa"])  # 接触压强
+print(result["contact_area_mm2"])  # 动态接触面积
+```
+
+### 自定义数据配置（v4.3.0+）
+
+动词库、物体库、动作规则表支持从外部 JSON 文件加载，业务定制无需改源码：
+
+```python
+from safety_engine import SafetyEngineV4
+
+# 方式 1：从 JSON 文件加载
+engine = SafetyEngineV4.from_config(
+    verb_db_path="config/verbs.json",
+    object_db_path="config/objects.json",
+    action_rules_path="config/rules.json",
+)
+
+# 方式 2：直接传入字典
+engine = SafetyEngineV4(
+    verb_db={"my_verb": {...}},
+    action_rules={"my_action": {...}},
+)
 ```
 
 ### 运行 Demo
@@ -188,215 +223,6 @@ python tests/test_engine.py
 # 方式 2：pytest 运行（需安装 pytest）
 pip install pytest
 pytest tests/test_engine.py -v
-pytest tests/test_engine.py -v --tb=short   # 失败时显示精简堆栈
-```
-
-测试覆盖：
-- **测试 1**：4 动作 × 20 物体 × 3 参数组（安全/边界/危险）= 240 场景准确率
-- **测试 2**：76 场景综合测试（语义 / 边界 / FAV / 闭合 / 干扰 / 端到端 / 接触面积）
-- **测试 3**：12 个自然语言输入场景
-- **测试 4**：JSON 参数模式（模式 B）端到端
-- **测试 5**：性能基准（平均延迟 < 100μs）
-- **测试 6**：输出结构完整性 + ISO 合规标注
-- **测试 7**：动态接触面积 + 冲量校验 + 反作用力约束（7 项物理验证）
-
----
-
-## API 说明
-
-### `check_action(scene_data, action_data, robot_data) -> dict`
-
-JSON 参数模式，生产环境推荐。零解析开销，延迟最低。
-
-**scene_data（场景数据）**
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| objects | list | 场景中的物体列表，每个物体含 object_id / mass_kg / stability / contact_area_mm2 |
-
-**action_data（动作数据）**
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| type | string | 动作类型：grasp / carry / push / pull / lift / place / press / insert / rotate / hold / release 等 |
-| force_n | float | 作用力（N） |
-| velocity_ms | float | 运动速度（m/s） |
-| acceleration_ms2 | float | 加速度（m/s²） |
-| target_object | string | 目标物体 ID |
-
-**robot_data（机器人能力）**
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| max_force_n | float | 最大作用力（N） |
-| max_velocity_ms | float | 最大速度（m/s） |
-| max_acceleration_ms2 | float | 最大加速度（m/s²） |
-
-### `check_command(action, obj, params=None, robot=None) -> dict`
-
-自然语言模式，快速原型和调试用。
-
-### 返回值字段
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `verdict` | string | 最终判定：`PASS` / `FAIL` / `REJECT` |
-| `state` | string | 动作状态：`idle` / `grasp` / `hold` |
-| `risk_level` | string | 风险等级：`LOW` / `MEDIUM` / `HIGH` |
-| `latency_ms` | float | 本次判定耗时（毫秒） |
-| `capability_match` | object | 能力适配结果（得分 + 详情） |
-| `action_target_match` | object | 动作-目标适配结果（得分 + 详情） |
-| `param_check` | object | 参数安全校验结果（得分 + 详情 + 安全裕度） |
-| `safety_zone` | object | 安全区间（最优值 / 上限 / 下限） |
-| `disturbance` | object | 干扰等级评估 |
-| `correction` | string | 判定原因 / 修正建议 |
-| `recommended_params` | object | 推荐参数 |
-| `contact_area_mm2` | float | 接触面积（mm²） |
-| `pressure_kPa` | float | 接触压强（kPa） |
-| `iso_compliance` | string | ISO 合规标注（人体接触场景自动触发） |
-| `risk_level_7` | string | 七级风险等级（L0~L6），v4.2.2+ |
-| `risk_subtypes` | array | 风险子类型标签列表，v4.2.2+ |
-| `recommended_params_v2` | object | FAIL 样本智能推荐参数，v4.2.2+ |
-| `retreat_params` | object/null | 边界 PASS 样本安全回退参数，v4.2.2+ |
-| `semantic_plausibility_score` | float/null | 语义合理性分数透传，v4.2.2+ |
-| `over_ratio` | float | 超标倍率（FAIL=最严维度实际值/限值之比，PASS=0.0），v4.2.3+ |
-| `physics` | object | 力学分析输出（Layer1 + Layer2 两层封装），v4.3.0+，详见【力学增强】章节 |
-
----
-
-## 力学增强（v4.3.0 新增）
-
-v4.3 引入了力学计算层（Layer 5），将原先隐性的判定约束升级为**显性的、结构化的、可输出的力学计算结果**，为后续力学仿真引擎和世界模型物理先验打基础。
-
-> **设计原则**：力学增强是"加输出"，不是"改判定"。所有判定逻辑（PASS/FAIL/REJECT、风险等级）与 v4.2.3 完全一致，仅新增 `physics` 字段。
-> **向后兼容**：不传任何新参数时，使用默认值自动填充，零配置即可使用。
-
-### 两层力学架构（核心两层，Layer 3 待后续版本）
-
-```
-physics
-  ├── action_reaction       ← Layer 1: 作用-反作用完整对
-  └── momentum_analysis     ← Layer 2: 动量-冲量-时间链路
-  （energy_analysis         ← Layer 3: 能量守恒校验，下次版本再做）
-```
-
-### Layer 1：作用-反作用完整对（action_reaction）
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `action_force_magnitude_N` | float | 作用力大小（N） |
-| `action_force_direction` | list[float] | 作用力方向单位向量（3D，[x, y, z]） |
-| `reaction_force_magnitude_N` | float | 反作用力大小（N），与作用力大小相等（牛顿第三定律） |
-| `reaction_force_direction` | list[float] | 反作用力方向单位向量（3D），与作用力方向相反 |
-| `normal_force_N` | float | 法向分量（N），垂直接触面 |
-| `friction_force_N` | float | 切向摩擦力（N），μ × 法向力 |
-| `contact_point_offset_m` | list[float] | 作用点相对于物体中心的偏移（m），3D [dx, dy, dz] |
-| `action_torque_Nm` | float | 作用力矩（N·m），力 × 力臂 |
-| `reaction_torque_Nm` | float | 反作用力矩（N·m），大小相等方向相反 |
-
-**简化假设**（不追求仿真精度，要的是物理框架完整）：
-- 对于标量力输入，默认作用力沿 x 轴正方向（推力）或 z 轴负方向（压力/抓取）
-- 接触面默认在 y-z 平面（法向为 x 轴），法向力 = 作用力的 x 分量
-- 接触点默认在物体表面中心，偏移 = [物体_radius, 0, 0]，物体半径从接触面积反推（面积 = πr²）
-- 力矩简化为平面内计算（力 × 偏移距离）
-- 摩擦力方向与作用力切向分量相反
-
-**动作类型到方向的映射**：
-
-| 动作类型 | 主方向 | 说明 |
-|----------|--------|------|
-| push / pull | +x / -x | 水平方向 |
-| press / grasp / hold | +x（法向） | 垂直于接触面方向 |
-| carry / lift | +y | 垂直向上 |
-| place / release | -y | 垂直向下 |
-| insert / rotate | 混合 | 力矩为主 |
-| 其他默认 | +x | 水平 |
-
-### Layer 2：动量-冲量-时间链路（momentum_analysis）
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `impulse_Ns` | float | 冲量（N·s = kg·m/s），力 × 接触时间 |
-| `contact_duration_s` | float | 接触持续时间（s） |
-| `force_time_profile` | string | 力-时曲线类型：`instant_impact`（瞬时冲击）/ `steady_pressure`（稳态施压）/ `gradual_loading`（渐进加载） |
-| `momentum_transfer_kgms` | float | 动量传递量（kg·m/s），= 冲量（牛顿第三定律） |
-| `object_mass_kg` | float | 物体质量（kg），从物体属性读取，无则按类别估算 |
-| `velocity_change_mps` | float | 物体速度变化（m/s）= 动量变化 / 质量 |
-| `kinetic_energy_change_J` | float | 动能变化（J）= 0.5 × m × Δv² |
-
-**物体质量估算**（物体库没有 mass_kg 字段时按类别估算）：
-
-| 类别 | 质量范围 | 典型值 |
-|------|----------|--------|
-| tiny / 微小 | 0.01~0.1 kg | 0.05 kg |
-| light / 轻物 | 0.1~1 kg | 0.2~0.5 kg |
-| medium / 中等 | 1~5 kg | 2 kg |
-| heavy / 重物 | 5~20 kg | 10~20 kg |
-| very_heavy / 极重 | 20~100 kg | 25~70 kg |
-
-**接触时间默认值**：
-
-| 动作类别 | 默认接触时间 | 说明 |
-|----------|-------------|------|
-| 冲击类（impact / collision） | 0.01 s | 瞬时接触 |
-| 普通动作（push / pull / press） | 0.1~0.5 s | 正常交互 |
-| 持续动作（hold / carry / lift） | 1.0 s | 稳态保持 |
-
-### 使用方式
-
-力学分析自动触发，无需额外配置：
-
-```python
-from safety_engine import SafetyEngineV4
-
-engine = SafetyEngineV4()
-
-# 基础使用 — 自动计算，零配置
-result = engine.check_command("push", "box",
-                              params={"force": 50, "speed": 0.5})
-physics = result["physics"]
-
-# 查看作用-反作用力
-print(physics["action_reaction"]["action_force_magnitude_N"])     # 50.0
-print(physics["action_reaction"]["reaction_force_magnitude_N"])   # 50.0
-print(physics["action_reaction"]["action_force_direction"])       # [1.0, 0.0, 0.0]
-
-# 查看动量变化
-print(physics["momentum_analysis"]["impulse_Ns"])                  # 冲量
-print(physics["momentum_analysis"]["momentum_transfer_kgms"])      # 动量传递
-print(physics["momentum_analysis"]["velocity_change_mps"])         # 速度变化
-print(physics["momentum_analysis"]["kinetic_energy_change_J"])     # 动能变化
-
-# 高级使用 — 传入更丰富的物理参数（通过 context）
-result = engine.check_command("push", "box",
-                              params={"force": 50, "speed": 0.5},
-                              context={
-                                  "contact_duration_s": 2.0,
-                                  "force_direction": [1.0, 0.0, 0.0],
-                                  "contact_point_mm": [50.0, 20.0, 0.0],
-                              })
-```
-
-### 关键公式
-
-**牛顿第三定律（作用与反作用）**：
-```
-F_action = -F_reaction  （大小相等，方向相反）
-```
-
-**冲量-动量定理**：
-```
-I = F_net × Δt = Δp = m × Δv
-```
-
-**动能变化**：
-```
-ΔE_k = 0.5 × m × Δv²
-```
-
-**摩擦力**：
-```
-f = μ × N  （μ = 摩擦系数，N = 法向力）
 ```
 
 ---
@@ -407,56 +233,14 @@ f = μ × N  （μ = 摩擦系数，N = 法向力）
 
 | 指标 | 数值 |
 |------|------|
-| 平均延迟 | **~15 μs**（0.015 ms） |
-| P95 延迟 | ~18 μs |
-| P99 延迟 | ~22 μs |
-| 单线程吞吐量 | **~100,000 次/秒** |
+| 平均延迟 | **~17 μs**（0.017 ms） |
+| P95 延迟 | ~22 μs |
+| P99 延迟 | ~27 μs |
+| 单线程吞吐量 | **~58,000 次/秒** |
 | 自然语言模式延迟 | 0.3–0.8 ms |
 | 内存占用 | < 5 MB |
 | 外部依赖 | 0（仅 Python 标准库） |
 | 确定性 | 100%（相同输入永远相同输出） |
-
----
-
-## 技术原理
-
-### 三层力约束模型
-
-从动量-能量双守恒推导，力的安全性由三层约束共同决定，最终取最严格值：
-
-1. **输出端约束** — 机器人输出能力上限（电机 / 关节极限）
-2. **接收端约束** — 物体力学响应上限（材料 / 结构极限，含动态接触面积、冲量、压强计算）
-3. **双向约束** — 反作用力与本体稳定性（牛顿第三定律，机器人基座摩擦力上限）
-
-### 动态接触面积
-
-软质 / 易碎物体在受力后接触面积会增大，压强随面积动态调整：
-- 刚体（金属、石头）：刚度大，接触面积基本不变
-- 软物（面包、水果）：刚度小，接触面积随力线性增长，最大可达 base_area 的 1.5 倍
-- 易碎物（鸡蛋、玻璃）：变形极小但压强大了直接碎，以压强阈值判定
-
-### 冲量安全校验
-
-对 carry / move / push / pull / lift 等有位移的动作，增加 `冲量 = 质量 × 速度` 的安全约束：
-- 易碎物 / 液体：冲量上限低（防止碎裂 / 晃洒）
-- 重物 / 刚体：冲量上限高
-- 人体接触：冲量上限收紧（避免高速碰撞）
-
-非移动类动作（grasp / hold / press 等）不触发冲量校验。
-
-### 反作用力约束
-
-机器人对物体施加的力，等于物体对机器人的反作用力（牛顿第三定律）。
-当反作用力超过机器人基座能提供的最大静摩擦力时，机器人会失稳。
-
-```
-max_reaction = base_weight_kg × G × friction_coef
-```
-
-- `base_weight_kg`：机器人自重 / 基座重量
-- `ground_friction`：地面摩擦系数（robot_data 可配置，默认 0.6 橡胶-地面）
-  - 光滑大理石 ~0.2，草地 ~0.5，冰面 ~0.1，橡胶地面 ~0.6-1.0
-- `fixed_base` 标记的工业机器人不受此约束
 
 ---
 
@@ -467,86 +251,72 @@ max_reaction = base_weight_kg × G × friction_coef
 - **PASS 样本**：按 `safety_margin`（安全裕度）分档，裕度越高越安全
 - **FAIL 样本**：按 `over_ratio`（超标倍率）分档，倍率越大越危险
 
-| 等级 | 中文标签 | 判定 | 划分依据 | 范围 | 典型场景 |
-|------|----------|------|----------|------|----------|
-| **L0** | 安全 | PASS | safety_margin | 0.50 ~ 1.00 | 日常抓取轻物、低速操作，远低于安全边界 |
-| **L1** | 低风险 | PASS | safety_margin | 0.30 ~ 0.50 | 中等参数操作，有一定安全余量 |
-| **L2** | 中低风险 | PASS | safety_margin | 0.15 ~ 0.30 | 接近安全区间上限的正常操作 |
-| **L3** | 中风险/接近边界 | PASS | safety_margin | 0.05 ~ 0.15 | 边界操作，建议留有余量 |
-| **L4** | 中高风险/临界 | PASS | safety_margin | 0.00 ~ 0.05 | 参数紧贴安全上限，稍有波动即 FAIL |
-| **L5** | 高风险/越线 | FAIL | over_ratio | 1.0 ~ 1.5 | 参数轻微超标，降低参数即可安全 |
-| **L6** | 危险/严重越线 | FAIL | over_ratio | > 1.5 | 参数严重超标，需要大幅降低或重新规划 |
-
-> **说明**：
-> - `safety_margin` = 1 - 最大超限比，取值范围 [0, 1]，仅 PASS 样本有意义
-> - `over_ratio` = 最严维度的实际值 / 限值，取值范围 [0, +∞)，PASS 样本为 0.0
-> - 原五级 `risk_level` 字段保持不变（LOW/MEDIUM/HIGH），向后兼容
-> - 可通过 `SafetyEngineV4.RISK_LEVEL_7_RULES` 类常量程序化访问完整规则定义
+| 等级 | 中文标签 | 判定 | 划分依据 | 范围 |
+|------|----------|------|----------|------|
+| **L0** | 安全 | PASS | safety_margin | 0.50 ~ 1.00 |
+| **L1** | 低风险 | PASS | safety_margin | 0.30 ~ 0.50 |
+| **L2** | 中低风险 | PASS | safety_margin | 0.15 ~ 0.30 |
+| **L3** | 中风险/接近边界 | PASS | safety_margin | 0.05 ~ 0.15 |
+| **L4** | 中高风险/临界 | PASS | safety_margin | 0.00 ~ 0.05 |
+| **L5** | 高风险/越线 | FAIL | over_ratio | 1.0 ~ 1.5 |
+| **L6** | 危险/严重越线 | FAIL | over_ratio | > 1.5 |
 
 ---
 
-## 超标倍率（over_ratio）说明
+## 技术原理
 
-`over_ratio` 是 v4.2.3 新增的 FAIL 样本超标程度指标，表示最严维度的实际值与限值之比。
+### 三层力约束模型
 
-**计算公式**：
+力的安全性由三层约束共同决定，最终取最严格值：
+
+1. **输出端约束** — 机器人输出能力上限（电机 / 关节极限）
+2. **接收端约束** — 物体力学响应上限（材料 / 结构极限，含动态接触面积、冲量、压强计算）
+3. **双向约束** — 反作用力与本体稳定性（牛顿第三定律，机器人基座摩擦力上限）
+
+### 动态接触面积
+
+软质 / 易碎物体在受力后接触面积会增大，压强随面积动态调整：
+- 刚体（金属、石头）：刚度大，接触面积基本不变
+- 软物（面包、水果）：刚度小，接触面积随力线性增长
+- 易碎物（鸡蛋、玻璃）：变形极小但压强大了直接碎，以压强阈值判定
+
+### 冲量安全校验
+
+对 carry / move / push / pull / lift 等有位移的动作，增加 `冲量 = 质量 × 速度` 的安全约束：
+- 易碎物 / 液体：冲量上限低
+- 重物 / 刚体：冲量上限高
+- 人体接触：冲量上限收紧
+
+### 反作用力约束
+
+机器人对物体施加的力，等于物体对机器人的反作用力。
+当反作用力超过机器人基座能提供的最大静摩擦力时，机器人会失稳。
+
 ```
-over_ratio = max(
-    force / force_limit,
-    speed / speed_limit,
-    pressure / pressure_limit,
-    impulse / impulse_limit,      # 仅冲量触发时
-    reaction_force / reaction_force_limit,  # 仅反作用约束时
-    force / iso_force_limit,      # 仅人体接触时
-)
+max_reaction = base_weight_kg × G × friction_coef
 ```
-
-**取值含义**：
-
-| over_ratio | 含义 |
-|------------|------|
-| 0.0 | PASS 样本，未越线 |
-| 1.0 | 刚好在边界上 |
-| 1.2 | 超出限值 20% |
-| 2.0 | 超出限值 100%（即 2 倍） |
-| 5.0 | 超出限值 400%（即 5 倍，严重越线） |
-
-> **注意**：`over_ratio` 取的是**最严维度**的倍率。即使只有一个维度严重超标，
-> 其他维度正常，over_ratio 也会反映那个最严重的超标程度。
 
 ---
 
-## 支持的动作
+## 支持的动作 & 物体类型
 
 **JSON 模式核心动作（10+）**：
-`grasp`（抓取）、`carry`（搬运）、`push`（推）、`pull`（拉）、
-`lift`（抬起）、`place`（放置）、`press`（按压）、`insert`（插入）、
-`rotate`（旋转）、`hold`（保持）、`release`（释放）等。
+`grasp` / `carry` / `push` / `pull` / `lift` / `place` / `press` /
+`insert` / `rotate` / `hold` / `release` 等
 
 **自然语言模式（中文 35+ 动词）**：
-抓态类（抓/拿/取/放/推/拉/拍/打/扔/接/开/关/插/拔/拧/摸/按/捏）+
-持态类（握/持/举/端/夹/扶/托/提/压）+
-复合类（搬/踩/吸/顶/卡/背/扛/搬运）
+抓态类 + 持态类 + 复合类
 
-> 更多动作可通过扩展动词库和安全规则快速添加。
-
----
-
-## 支持的物体类型
-
-`rigid`（刚性体）/ `semi_rigid`（半刚性）/ `flexible`（柔性体）/ `fragile`（易碎品）/ `fluid`（液体）/ `human`（人体接触）/ `heavy`（重物）
-
-每种类型有独立的交互规则和安全限值。
+**物体类型（7种）**：
+`rigid`（刚性）/ `semi_rigid`（半刚性）/ `flexible`（柔性）/
+`fragile`（易碎）/ `fluid`（液体）/ `human`（人体）/ `heavy`（重物）
 
 ---
 
-## ISO 标准
+## ISO 标准参考
 
 - **ISO 10218-1/2** — 工业机器人安全标准（设计参考）
 - **ISO/TS 15066** — 协作机器人技术规范（设计参考）
-
-触发条件：物体类别为 `human`（人体部位）时，自动触发 ISO 力限值校验；
-`human_contact` 属性仅用于标注接触态场景参考，不施加 ISO 力约束（避免日常物体过度收紧）。
 
 > 注：本产品为软件中间件，ISO 标准为设计层面的对齐与参考，非第三方认证级合规声明。
 
@@ -591,31 +361,172 @@ engine = SafetyEngineV4()
 result = engine.check_command(action, obj, params)
 
 # 方式2：封装为 HTTP 服务
-# 方式3：编译为 C 扩展（通过 Cython / Nuitka）
+# 方式3：编译为 C 扩展（Cython / Nuitka）
 ```
+
+---
+
+## API 参考
+
+### SafetyEngineV4
+
+主引擎类，提供两种输入模式。
+
+#### `__init__(self, verb_db=None, object_db=None, action_rules=None, rules=None)`
+
+初始化引擎。所有参数均可选，不传则使用内置默认值。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `verb_db` | `Optional[Dict]` | 自定义动词库字典 |
+| `object_db` | `Optional[Dict]` | 自定义物体属性库字典 |
+| `action_rules` | `Optional[Dict]` | 自定义动作规则表字典 |
+| `rules` | `Optional[SafetyRules]` | 自定义全局安全规则 |
+
+#### `from_config(verb_db_path=None, object_db_path=None, action_rules_path=None, rules=None)`
+
+类方法，从 JSON 文件加载配置数据并创建引擎实例。
+
+```python
+engine = SafetyEngineV4.from_config(
+    verb_db_path="config/verbs.json",
+    action_rules_path="config/rules.json",
+)
+```
+
+#### `check_command(self, action, obj, params=None, robot=None, object_params=None, context=None) -> Dict`
+
+自然语言模式输入。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `action` | `str` | 动作名称（中文动词，如"抓取"/"推"） |
+| `obj` | `str` | 目标物体名称 |
+| `params` | `Optional[Dict]` | 动作参数 `{"force": N, "speed": m/s, ...}` |
+| `robot` | `Optional[str / Dict]` | 机器人配置：字符串机型名或自定义能力字典 |
+| `object_params` | `Optional[Dict]` | 自定义物体属性（覆盖内置物体库） |
+| `context` | `Optional[Dict]` | 上下文 `{"near_human": bool, "fragile": bool, "semantic_score": float}` |
+
+返回：V4Result 字典，含 verdict / risk_level / risk_level_7 / over_ratio / input_warnings 等 20+ 字段。
+
+#### `check_action(self, scene_data, action_data, robot_data) -> Dict`
+
+JSON 参数模式输入（生产推荐，性能最优）。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `scene_data` | `Dict` | 场景数据，含 `objects` 列表 |
+| `action_data` | `Dict` | 动作数据，含 `type` / `force_n` / `velocity_ms` / `target_object` 等 |
+| `robot_data` | `Dict` | 机器人能力数据 |
+
+### 输入校验（v4.3.0+）
+
+引擎在入口处自动进行输入有效性检查：
+
+| 情况 | 处理方式 |
+|------|----------|
+| 类型错误（如 params 不是 dict） | `REJECT` + 说明 |
+| 空值 / None 关键参数 | `REJECT` + 说明 |
+| 数值为 NaN / 无穷大 | `REJECT` + 说明 |
+| force > 10000N / speed > 100m/s 明显越界 | `REJECT` + 说明 |
+| force / speed 为负数 | 自动取绝对值 + `input_warnings` 记录 |
+| 缺失可选参数 | 使用默认值 + `input_warnings` 记录 |
+
+`input_warnings` 为字符串列表，始终输出（空列表也输出），方便排查输入问题。
+
+---
+
+## 配置指南
+
+### 外部 JSON 配置文件格式
+
+#### 动词库（verbs.json）
+
+```json
+{
+  "my_action": {
+    "phase_type": "grasp",
+    "risk_level": 3,
+    "grasp_params": {
+      "max_force": 50,
+      "max_speed": 200,
+      "max_acceleration": 500
+    },
+    "hold_params": {
+      "min_force": 5,
+      "max_force": 50,
+      "max_displacement": 3
+    }
+  }
+}
+```
+
+#### 物体库（objects.json）
+
+```json
+{
+  "my_object": {
+    "category": "rigid",
+    "fragile": 0.2,
+    "mass_kg": 1.5,
+    "contact_area_mm2": 400,
+    "contact_stiffness": 3.0,
+    "max_deform": 0.1
+  }
+}
+```
+
+#### 规则表（rules.json）
+
+```json
+{
+  "rigid": {
+    "force_limit": 80,
+    "speed_limit": 2.0,
+    "pressure_limit_kpa": 500,
+    "impulse_max": 10.0
+  }
+}
+```
+
+> 完整字段定义请参考源码中 `VERB_DATABASE` / `OBJECT_PROPERTIES` / `ACTION_RULES` 的结构。
 
 ---
 
 ## 路线图
 
+- [x] v4.0 基础四层架构
+- [x] v4.1 评估改进与性能优化
+- [x] v4.2 物理三层结构升级（动态接触面积 + 冲量 + 反作用力）
+- [x] v4.2.x 质量修复与七级风险分级
+- [x] v4.3.0 质量增强：typing / 外部配置 / 输入校验 / 公共逻辑抽取
 - [ ] 更多动词扩展
 - [ ] 多物体交互场景支持
 - [ ] 连续动作轨迹安全校验
 - [ ] ROS / ROS2 集成包
 - [ ] C++ / Rust 版本
-- [ ] 可视化调试工具
+- [ ] **企业版 Layer 5 力学增强层**（商业授权）
 
 ---
 
-## ⚠️ Disclaimer
+## 关键词索引
 
-This project is provided for **research and educational purposes only**. It is NOT a certified safety device, NOT a substitute for professional risk assessment, and NOT intended for use in safety-critical applications without independent validation.
+> 便于搜索引擎索引 · 覆盖风口热词 + 技术深度词 + 独家标识符
 
-The authors make NO representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, or suitability of the software. Any use is at your own risk.
+**🔥 风口热词**
+`Embodied AI` · `具身智能` · `Physical AI` · `物理人工智能` · `Humanoid Robot Safety` · `人形机器人安全` · `Collaborative Robot` · `Cobot` · `协作机器人安全` · `VLA Safety Layer` · `Real-time Safety Middleware` · `实时安全中间件` · `Safety Watchdog` · `安全看门狗` · `Edge Inference` · `边缘推理` · `Robot Middleware` · `机器人中间件` · `Python Safety Library` · `Python安全库` · `Deterministic Safety` · `确定性安全` · `Zero-dependency Python`
 
-Always comply with local safety regulations (ISO 10218, ISO/TS 15066, and applicable national standards) and conduct thorough risk assessments before deploying any robotic system.
+**🏛️ 标准合规**
+`ISO 10218` · `ISO/TS 15066` · `TS 15066` · `工业机器人安全标准` · `人机协作安全规范` · `Human-Robot Collaboration` · `HRC` · `Power and Force Limiting` · `PFL` · `力与功率限制` · `Speed and Separation Monitoring` · `SSM` · `速度与分离监控` · `Safety-Rated Monitored Stop` · `安全等级监控停止`
+
+**🔬 核心技术**
+`Force-Velocity-Amplitude Constraint Checking` · `力-速度-幅度三维约束` · `Dynamics-based AI` · `基于动力学的AI判定` · `Semantic Parsing for Robotics` · `机器人语义解析` · `FAV Classifier` · `力-幅值-速度三维状态分类器` · `Quasi-Static Force Limits` · `准静态力限值` · `Reaction Force Constraint` · `反作用力约束` · `Force-Velocity Envelope` · `力-速包络线安全算法`
+
+**🏆 独家技术**
+`Dynamic Contact Area` · `动态接触面积` · `Impulse Safety Boundary` · `冲量安全边界` · `Reaction Force Stability` · `反作用力稳定性` · `7-Level Risk Granularity` · `七级风险粒度` · `Verb-Object Impossibility` · `动-宾不可能组合` · `Over-Ratio Metric` · `超标倍率`
 
 ---
+
 ## License
 
 MIT License — 详见 [LICENSE](LICENSE) 文件。
