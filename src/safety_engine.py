@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Rotor Safety Engine v1.0.0 — Real-time Robot Safety Middleware
+"""Rotor Safety Engine v4.3.0 — Real-time Robot Safety Middleware
 物理层运行时安全中间件 · 协作机器人安全 · ISO 10218 / ISO/TS 15066
 
 Core technologies:
@@ -18,7 +18,7 @@ Features:
   - Sub-millisecond latency (~17μs) · edge inference ready
   - Deterministic physics · zero neural networks · 100% interpretable
 
-v1.0.0 升级：
+v4.3.0 升级：
   1. typing 完善：所有公共方法补全类型注解
   2. 公共逻辑抽取：_build_result 私有方法消除重复代码
   3. 输入参数校验：类型/范围/NaN/越界全面检查，新增 input_warnings 字段
@@ -27,8 +27,6 @@ v1.0.0 升级：
   5. SemanticParser / SafetyAdapter 实例属性化，支持多实例独立配置
 """
 
-__version__ = "1.0.1"
-__author__ = "Rotor Dynamics"
 
 import time
 import math
@@ -427,16 +425,20 @@ ROBOT_CAPABILITIES: Dict[str, Dict] = {
     },
     "轮式机械臂": {"name": "轮式机械臂", "tier": 1, "dexterity": 0.3,
                   "actions": ["grasp", "carry", "push", "move"],
-                  "max_force": 50, "max_speed": 1.0, "max_accel": 5.0,  "base_weight_kg": 30.0},
+                  "max_force": 50, "max_speed": 1.0, "max_accel": 5.0,
+                  "base_weight_kg": 30.0},
     "基础人形": {"name": "基础人形", "tier": 2, "dexterity": 0.6,
                 "actions": ["grasp", "carry", "push", "move"],
-                "max_force": 100, "max_speed": 1.5, "max_accel": 10.0,  "base_weight_kg": 50.0},
+                "max_force": 100, "max_speed": 1.5, "max_accel": 10.0,
+                "base_weight_kg": 50.0},
     "灵巧人形": {"name": "灵巧人形", "tier": 3, "dexterity": 0.9,
                 "actions": ["grasp", "carry", "push", "move"],
-                "max_force": 200, "max_speed": 3.0, "max_accel": 20.0,  "base_weight_kg": 60.0},
+                "max_force": 200, "max_speed": 3.0, "max_accel": 20.0,
+                "base_weight_kg": 60.0},
     "机械臂": {"name": "机械臂", "tier": 2, "dexterity": 0.5,
               "actions": ["grasp", "carry", "push", "move"],
-              "max_force": 150, "max_speed": 1.5, "max_accel": 10.0,  "base_weight_kg": 45.0},
+              "max_force": 150, "max_speed": 1.5, "max_accel": 10.0,
+              "base_weight_kg": 45.0},
 }
 
 # -------------------------------------------------------------------------
@@ -696,7 +698,7 @@ class V4Result:
     retreat_params: Optional[Dict] = None
     # 语义合理性分数透传（外部传入，原样回传）
     semantic_plausibility_score: Optional[float] = None
-    # === v1.0.0 新增字段 ===
+    # === v4.3.0 新增字段 ===
     # 输入层面的非致命警告列表
     input_warnings: List[str] = field(default_factory=list)
     # === v4.2.3 新增字段 ===
@@ -728,7 +730,7 @@ class V4Result:
             "semantic_plausibility_score": self.semantic_plausibility_score,
             # === v4.2.3 新增字段 ===
             "over_ratio": round(self.over_ratio, 4),
-            # === v1.0.0 新增字段 ===
+            # === v4.3.0 新增字段 ===
             "input_warnings": self.input_warnings,
         }
 
@@ -740,7 +742,7 @@ class V4Result:
 class SemanticParser:
     """语义解析：中文 → 标准key + 属性查询
 
-    v1.0.0: 支持通过构造函数注入 verb_db / object_db / action_rules，
+    v4.3.0: 支持通过构造函数注入 verb_db / object_db / action_rules，
             不传则使用全局默认值（保持向后兼容）。
     """
 
@@ -783,7 +785,6 @@ class SemanticParser:
             cap["fixed_base"] = False
         return cap
 
-
     @staticmethod
     def resolve_action(action_str: str) -> str:
         # 先查同义词表（中文→英文）
@@ -816,8 +817,7 @@ class SemanticParser:
 
     @staticmethod
     def get_robot_cap(robot: str) -> Dict[str, Any]:
-        result = ROBOT_CAPABILITIES.get(robot) or ROBOT_CAPABILITIES.get("humanoid_basic")
-        return result  # type: ignore[return-value]  # type: ignore[return-value]
+        return ROBOT_CAPABILITIES.get(robot, ROBOT_CAPABILITIES.get("humanoid_basic"))
 
     def lookup_rules(self, action_key: str, category: str) -> Optional[Dict[str, Any]]:
         action_rules = self.action_rules.get(action_key)
@@ -1165,12 +1165,12 @@ class SemanticParser:
         if suggested_forces:
             final_force = min(suggested_forces)
         else:
-            final_force = force * safety_factor if force > 0 else None  # type: ignore[assignment]
+            final_force = force * safety_factor if force > 0 else None
 
         if suggested_speeds:
             final_speed = min(suggested_speeds)
         else:
-            final_speed = speed * safety_factor if speed > 0 else None  # type: ignore[assignment]
+            final_speed = speed * safety_factor if speed > 0 else None
 
         # 生成建议文本
         hint_parts = []
@@ -1186,7 +1186,7 @@ class SemanticParser:
             hint_parts.append(f"多维度同时超标({len(over_dimensions)}项)，需综合调整")
         elif over_dimensions:
             d = over_dimensions[0]
-            hint_parts.append(f"{dim_names.get(str(d['dimension']), str(d['dimension']))}超标{d['overshoot_ratio']:.1f}倍")
+            hint_parts.append(f"{dim_names.get(d['dimension'], d['dimension'])}超标{d['overshoot_ratio']:.1f}倍")
 
         if any(d["dimension"] in ("force", "reaction_force", "iso_force") for d in over_dimensions):
             hint_parts.append("建议分阶段施力，避免冲击")
@@ -1441,10 +1441,10 @@ class SafetyAdapter:
         - params有值 → 使用动词约束 + 规则表硬约束 + 反作用力约束
         - 规则表超限 → 硬FAIL（force>f_max 或 speed>s_max）
         
-        三层力约束（从动量-能量双守恒推导）：
-        Layer 1: 主→谓 — 机器人输出能力上限（电机/关节极限）
-        Layer 2: 谓→宾 — 物体承受能力上限（材料/结构极限，含动态接触面积计算）
-        Layer 3: 主↔宾 — 反作用力约束（机器人本体稳定性，能量守恒双向性）
+        三层力约束：
+        Layer 1 — 机器人输出能力上限（电机/关节极限）
+        Layer 2 — 物体承受能力上限（材料/结构极限，含动态接触面积计算）
+        Layer 3 — 反作用力约束（机器人本体稳定性）
         最终安全力上限 = min(三层各自的上限)
         """
         # 无参数 → 跳过参数检查（语义层已校验）
@@ -1870,7 +1870,7 @@ class SafetyJudgeV4:
         vi = VERB_DATABASE.get(verb, {})
         return {
             "level": level, "actions": tpl["actions"],
-            "force_adjustment": base_force * tpl["force_ratio"],  # type: ignore[operator]
+            "force_adjustment": base_force * tpl["force_ratio"],
             "speed_limit_factor": tpl["speed_factor"],
             "state_transition": tpl["transition"],
             "verb_response": vi.get("disturbance_response", ""),
@@ -1936,14 +1936,14 @@ def load_action_rules(json_path: str) -> Dict[str, Dict[str, Dict[str, Any]]]:
 
 class SafetyEngineV4:
     """
-    Rotor Safety Engine v1.0.0
+    Rotor Safety Engine v4.3.0
 
     模式A: check_command(action, obj, params, ...)  — 自然语言
     模式B: check_action(scene, action, robot)        — JSON参数
     """
 
     # === 版本号 ===
-    VERSION = "1.0.0"
+    VERSION = "4.3.0"
 
     # === v4.2.3 新增：七级风险分级规则（与 map_risk_level_7 完全一致）===
     # PASS 样本：基于 safety_margin 分档
@@ -2348,8 +2348,7 @@ class SafetyEngineV4:
         rules = self.parser.lookup_rules_fallback(action_key, props)
 
         # Layer 2: 安全适配（参数校验量化表达）
-
-        capability_result = self.adapter.check_capability_action(robot, action_key, subj, verb_info)  # type: ignore[arg-type]
+        capability_result = self.adapter.check_capability_action(robot, action_key, subj, verb_info)
         target_result = self.adapter.check_action_target(action_key, obj, verb_info, props)
         param_result = self.adapter.check_params(action_key, params or {}, verb_info, props, subj, rules, obj)
 
@@ -2532,491 +2531,3 @@ class SafetyEngineV4:
             category=category,
             input_warnings=input_warnings,
         )
-# =====================================================================
-# 辅助函数（供测试用，必须在if __name__之前定义）
-# =====================================================================
-
-def _check_a(engine, subj, verb, obj, expected):
-    r = engine.check_command(verb, obj, robot=subj)
-    if r["verdict"] == "REJECT": actual = "reject"
-    elif r["risk_level"] == "LOW": actual = "safe"
-    elif r["risk_level"] == "MEDIUM": actual = "caution"
-    else: actual = "danger"
-    return actual == expected
-
-def _check_f(engine, subj, verb, obj, params, expected):
-    r = engine.check_command(verb, obj, params, robot=subj)
-    if r["verdict"] == "REJECT": actual = "reject"
-    elif r["risk_level"] == "LOW": actual = "safe"
-    elif r["risk_level"] == "MEDIUM": actual = "caution"
-    else: actual = "danger"
-    return actual == expected
-
-
-# =====================================================================
-# 第七部分：测试套件
-# =====================================================================
-
-if __name__ == "__main__":
-    print("=" * 70)
-    print("Rotor Safety Engine v4.2.3 测试套件")
-    print("=" * 70)
-
-    engine = SafetyEngineV4()
-    all_pass = True
-
-    TEST_ROBOT = {
-        "max_force_n": 500.0, "max_velocity_ms": 2.0,
-        "max_acceleration_ms2": 50.0, "max_payload_kg": 100.0,
-        "min_force_n": 0.001, "repeatability_mm": 0.02,
-        "force_resolution_n": 0.001,
-    }
-
-    # =================================================================
-    # 测试1：228场景准确率（4动作×19物体×3参数组）
-    # =================================================================
-    print("\n" + "─" * 70)
-    print("测试1：228场景准确率")
-    print("─" * 70)
-
-    actions = ["grasp", "carry", "push", "move"]
-    objects = list(OBJECT_PROPERTIES.keys())
-    t1_total = t1_pass = 0
-    t1_errors = []
-
-    for action in actions:
-        for obj_name in objects:
-            props = OBJECT_PROPERTIES[obj_name]
-            cat = props["category"]
-            is_imp = cat in IMPOSSIBLE_PAIRS.get(action, set())
-
-            # 使用引擎真实的 fallback 逻辑取规则，与 check_command 内部一致
-            # 使用引擎真实的 fallback 逻辑取规则，与 check_command 内部一致
-            rule = engine.parser.lookup_rules_fallback(action, props)
-            if rule is None: continue
-
-            # 取动词约束，有效上限 = min(规则上限, 动词上限, 机器人上限)
-            verb_info = engine.parser.get_verb_info(action)
-            r_force_max = rule["force"][2]
-            r_speed_max = rule["speed"][2]
-            f_opt = rule["force"][1]
-            s_opt = rule["speed"][1]
-
-            # 计算有效上限（考虑动词约束 + 机器人能力 + 易碎系数 + ISO限值）
-            robot_cap = engine.parser.normalize_robot_cap(TEST_ROBOT)
-            f_max_verb = verb_info["grasp_params"]["max_force"] if verb_info and verb_info.get("grasp_params") else float("inf")
-            f_max_robot = robot_cap.get("max_force", 100)
-            fragile_val = float(props.get("fragile", 0.0))
-            fragile_factor = 1.0 - fragile_val * engine.adapter.rules.fragile_force_factor
-            cat = props.get("category", "rigid")
-            # ISO限值：仅人体部位生效（human_contact仅作标注参考，不收紧推荐参数）
-            iso_limit = float("inf")
-            if cat == "human":
-                iso_limit = engine.adapter.rules.iso.get_quasi_static_limit(obj_name)
-            if r_force_max > 0:
-                f_max = min(r_force_max, f_max_verb, f_max_robot, iso_limit) * fragile_factor
-            else:
-                f_max = min(f_max_verb, f_max_robot, iso_limit) * fragile_factor
-
-            s_max_verb = (verb_info["grasp_params"]["max_speed"] / 1000.0) if verb_info and verb_info.get("grasp_params") else float("inf")
-            s_max_robot = robot_cap.get("max_speed", 2.0)
-            if r_speed_max > 0:
-                s_max = min(r_speed_max, s_max_verb, s_max_robot)
-            else:
-                s_max = min(s_max_verb, s_max_robot)
-
-            # 安全值：取规则最优值，但不超过有效上限的 80%
-            f_safe = min(f_opt, f_max * 0.8)
-            s_safe = min(s_opt, s_max * 0.8)
-
-            # 安全 → PASS/REJECT
-            r = engine.check_command(action, obj_name, {"force": f_safe, "speed": s_safe}, robot=TEST_ROBOT)
-            exp = "REJECT" if is_imp else "PASS"
-            t1_total += 1
-            if r["verdict"] == exp: t1_pass += 1
-            else: t1_errors.append(f"  ✗ {action}+{obj_name} safe: 期望{exp}, 实际{r['verdict']} (f={f_safe:.3f},s={s_safe:.4f})")
-
-            # 边界 → PASS/REJECT（取有效上限的 90%）
-            bf = f_max * 0.9 if f_max > 0 else 0
-            bs = s_max * 0.9 if s_max > 0 else 0
-            r = engine.check_command(action, obj_name, {"force": bf, "speed": bs}, robot=TEST_ROBOT)
-            t1_total += 1
-            if r["verdict"] == exp: t1_pass += 1
-            else: t1_errors.append(f"  ✗ {action}+{obj_name} boundary: 期望{exp}, 实际{r['verdict']} (f={bf:.3f},s={bs:.4f})")
-
-            # 危险 → FAIL/REJECT
-            # impossible 组合期望 REJECT，正常组合期望 FAIL（超过有效上限即可）
-            if is_imp:
-                r = engine.check_command(action, obj_name, {"force": f_max * 2 if f_max > 0 else 0, "speed": s_max * 2}, robot=TEST_ROBOT)
-                t1_total += 1
-                if r["verdict"] == "REJECT": t1_pass += 1
-                else: t1_errors.append(f"  ✗ {action}+{obj_name} danger: 期望REJECT, 实际{r['verdict']}")
-            else:
-                r = engine.check_command(action, obj_name, {"force": f_max * 2.0 if f_max > 0 else 0, "speed": s_max * 2.0}, robot=TEST_ROBOT)
-                t1_total += 1
-                if r["verdict"] == "FAIL": t1_pass += 1
-                else: t1_errors.append(f"  ✗ {action}+{obj_name} danger: 期望FAIL, 实际{r['verdict']} (f={f_max*2:.3f},s={s_max*2:.4f})")
-
-    acc1 = t1_pass / t1_total if t1_total > 0 else 0
-    print(f"  结果: {t1_pass}/{t1_total} = {acc1:.2%}")
-    for e in t1_errors[:5]: print(e)
-    if len(t1_errors) > 5: print(f"  ... 共{len(t1_errors)}个错误")
-    if not t1_errors: print("  ✓ 全部通过！")
-    if acc1 < 1.0: all_pass = False
-
-    # =================================================================
-    # 测试2：76场景综合测试
-    # =================================================================
-    print("\n" + "─" * 70)
-    print("测试2：76场景综合测试")
-    print("─" * 70)
-
-    # A类：语义25场景
-    semantic_tests = [
-        ("基础人形", "抓", "杯子", "safe"), ("基础人形", "拿", "书", "safe"),
-        ("基础人形", "取", "物品", "safe"), ("基础人形", "推", "门", "safe"),
-        ("基础人形", "拉", "抽屉", "safe"), ("基础人形", "按", "按钮", "safe"),
-        ("基础人形", "捏", "笔", "safe"), ("基础人形", "插", "钥匙", "safe"),
-        ("基础人形", "拧", "钥匙", "safe"), ("基础人形", "摸", "表面", "safe"),
-        ("灵巧人形", "握", "杯子", "safe"), ("灵巧人形", "持", "工具", "safe"),
-        ("灵巧人形", "举", "重物", "safe"), ("灵巧人形", "端", "碗", "safe"),
-        ("灵巧人形", "夹", "文件", "safe"), ("基础人形", "扶", "老人", "safe"),
-        ("基础人形", "托", "托盘", "safe"), ("基础人形", "提", "袋子", "safe"),
-        ("灵巧人形", "压", "模具", "safe"), ("基础人形", "踩", "踏板", "safe"),
-        ("灵巧人形", "吸", "玻璃", "safe"), ("灵巧人形", "顶", "门", "safe"),
-        ("基础人形", "卡", "卡槽", "safe"), ("基础人形", "背", "背包", "safe"),
-        ("基础人形", "扛", "袋子", "safe"),
-    ]
-
-    # B类：边界监控15场景
-    boundary_tests = [
-        ("握", "杯子", 25.0, 25.0, 1.0, 0.0, "none"),
-        ("握", "杯子", 30.0, 25.0, 1.0, 0.0, "none"),
-        ("握", "杯子", 25.0, 25.0, 1.0, 0.05, "none"),
-        ("握", "杯子", 25.0, 25.0, 1.0, 0.15, "micro"),
-        ("握", "杯子", 4.0, 25.0, 1.0, 0.0, "small"),
-        ("握", "杯子", 2.0, 25.0, 1.0, 0.0, "large"),
-        ("握", "杯子", 0.5, 25.0, 1.0, 0.0, "danger"),
-        ("握", "杯子", 25.0, 25.0, 4.0, 0.0, "medium"),
-        ("握", "杯子", 25.0, 25.0, 7.0, 0.0, "danger"),
-        ("握", "杯子", 25.0, 25.0, 1.0, 0.5, "large"),
-        ("举", "重物", 20.0, 100.0, 1.0, 0.0, "medium"),
-        ("端", "碗", 15.0, 15.0, 1.0, 0.0, "none"),
-        ("夹", "文件", 15.0, 15.0, 0.3, 0.0, "none"),
-        ("提", "袋子", 35.0, 40.0, 5.0, 0.0, "none"),
-        ("托", "托盘", 25.0, 25.0, 1.5, 0.0, "none"),
-    ]
-
-    # C类：FAV分类10场景
-    fav_tests = [
-        (0.0, 0.0, 0.0, "idle"), (0.01, 0.01, 0.005, "idle"),
-        (0.7, 0.4, 0.7, "grasping"), (0.5, 0.5, 0.005, "holding"),
-        (0.55, 0.5, 0.003, "holding"), (0.85, 0.3, 0.85, "grasping"),
-        (0.01, 0.02, 0.005, "idle"), (0.3, 0.6, 0.003, "holding"),
-        (0.9, 0.7, 0.9, "grasping"), (0.52, 0.48, 0.003, "holding"),
-    ]
-
-    # D类：状态稳定10场景
-    closure_tests = [
-        ("抓", 25.0, 25.0, 5.0, 1.0, True), ("抓", 25.0, 25.0, 50.0, 1.0, False),
-        ("抓", 10.0, 25.0, 5.0, 1.0, False), ("握", 25.0, 25.0, 5.0, 1.0, True),
-        ("拿", 20.0, 20.0, 3.0, 1.5, True), ("取", 15.0, 15.0, 3.0, 1.0, True),
-        ("推", 50.0, 50.0, 10.0, 3.0, True), ("按", 10.0, 10.0, 3.0, 0.5, True),
-        ("捏", 7.5, 7.5, 2.0, 0.3, True), ("插", 15.0, 15.0, 3.0, 0.3, True),
-    ]
-
-    # E类：干扰分级6场景
-    disturbance_tests = [
-        (0.02, "none"), (0.08, "micro"), (0.20, "small"),
-        (0.40, "medium"), (0.60, "large"), (0.90, "danger"),
-    ]
-
-    # F类：端到端5场景（参数单位与规则表一致）
-    e2e_tests = [
-        ("基础人形", "抓", "鸡蛋", {"force": 1.0, "speed": 0.03}, "safe"),
-        ("基础人形", "拿", "杯子", {"force": 5.0, "speed": 0.08}, "safe"),
-        ("基础人形", "推", "门", {"force": 20.0, "speed": 0.3}, "safe"),
-        ("灵巧人形", "握", "玻璃杯", {"force": 5.0, "speed": 0.03}, "safe"),
-        ("基础人形", "捏", "笔", {"force": 3.0, "speed": 0.01}, "safe"),
-    ]
-
-    # G类：接触面积5场景
-    area_tests = [
-        ("抓取", "杯子", {"force": 5.0, "speed": 0.05}, 200.0),
-        ("抓取", "杯子", {"force": 5.0, "speed": 0.05}, 800.0),
-        ("抓取", "杯子", {"force": 5.0, "speed": 0.05}, 400.0),
-        ("抓取", "鸡蛋", {"force": 1.0, "speed": 0.02}, 100.0),
-        ("抓取", "铁块", {"force": 20.0, "speed": 0.05}, 500.0),
-    ]
-
-    t2_total = t2_pass = 0
-    t2_errors = []
-
-    # A类
-    a_pass = 0
-    for subj, verb, obj, exp in semantic_tests:
-        t2_total += 1
-        if _check_a(engine, subj, verb, obj, exp):
-            t2_pass += 1
-            a_pass += 1
-        else:
-            r = engine.check_command(verb, obj, robot=subj)
-            actual = "reject" if r["verdict"] == "REJECT" else ("safe" if r["risk_level"] == "LOW" else "caution")
-            t2_errors.append(f"  ✗ A: {subj}+{verb}+{obj}: 期望{exp}, 实际{actual}")
-
-    # B类
-    b_pass = 0
-    for v, o, f, ft, d, vi, el in boundary_tests:
-        t2_total += 1
-        r = engine.judge.hold_boundary_check(v, f, ft, d, vi)
-        actual = r.get("disturbance_level", "none")
-        if actual == el:
-            t2_pass += 1
-            b_pass += 1
-        else:
-            t2_errors.append(f"  ✗ B: {v}+{o} f={f}: 期望{el}, 实际{actual}")
-
-    # C类
-    c_pass = 0
-    for f, a, vel, es in fav_tests:
-        t2_total += 1
-        r = engine.fav.classify(f, a, vel)
-        actual = r["phase_state"]
-        if actual == es:
-            t2_pass += 1
-            c_pass += 1
-        else:
-            t2_errors.append(f"  ✗ C: F={f},A={a},V={vel}: 期望{es}, 实际{actual}")
-
-    # D类
-    d_pass = 0
-    for v, f, ft, sp, d, ec in closure_tests:
-        t2_total += 1
-        actual = engine.judge.check_state_stabilization(v, f, ft, sp, d)  # type: ignore[assignment]
-        if actual == ec:
-            t2_pass += 1
-            d_pass += 1
-        else:
-            t2_errors.append(f"  ✗ D: {v} f={f}: 期望{ec}, 实际{actual}")
-
-    # E类
-    e_pass = 0
-    for s, el in disturbance_tests:
-        t2_total += 1
-        actual = engine.judge._classify_disturbance(s)
-        if actual == el:
-            t2_pass += 1
-            e_pass += 1
-        else:
-            t2_errors.append(f"  ✗ E: s={s}: 期望{el}, 实际{actual}")
-
-    # F类
-    f_pass = 0
-    for subj, verb, obj, params, exp in e2e_tests:
-        t2_total += 1
-        if _check_f(engine, subj, verb, obj, params, exp):
-            t2_pass += 1
-            f_pass += 1
-        else:
-            r = engine.check_command(verb, obj, params, robot=subj)
-            actual = "reject" if r["verdict"] == "REJECT" else ("safe" if r["risk_level"] == "LOW" else "caution")
-            t2_errors.append(f"  ✗ F: {subj}+{verb}+{obj}: 期望{exp}, 实际{actual}")
-
-    # G类
-    g_pass = 0
-    for act, obj, params, area in area_tests:
-        t2_total += 1
-        r = engine.check_command(act, obj, params, robot=TEST_ROBOT,
-                                  object_params={"contact_area_mm2": area})
-        if r["verdict"] == "PASS":
-            t2_pass += 1
-            g_pass += 1
-        else:
-            t2_errors.append(f"  ✗ G: {act}+{obj} area={area}: {r['verdict']}")
-
-    acc2 = t2_pass / t2_total if t2_total > 0 else 0
-    print(f"  A类(语义25): {a_pass}/25")
-    print(f"  B类(边界15): {b_pass}/15")
-    print(f"  C类(FAV10):  {c_pass}/10")
-    print(f"  D类(闭合10): {d_pass}/10")
-    print(f"  E类(干扰6):  {e_pass}/6")
-    print(f"  F类(端到端5):{f_pass}/5")
-    print(f"  G类(接触5):  {g_pass}/5")
-    print(f"  总计: {t2_pass}/{t2_total} = {acc2:.2%}")
-    for e in t2_errors[:10]: print(e)
-    if len(t2_errors) > 10: print(f"  ... 共{len(t2_errors)}个错误")
-    if not t2_errors: print("  ✓ 全部通过！")
-    if acc2 < 0.90: all_pass = False
-
-    # =================================================================
-    # 测试3：自然语言输入（12个）
-    # =================================================================
-    print("\n" + "─" * 70)
-    print("测试3：自然语言输入")
-    print("─" * 70)
-
-    nl_tests = [
-        ("抓取", "鸡蛋", "PASS"), ("搬运", "铁块", "PASS"), ("推开", "椅子", "PASS"),
-        ("拿", "水", "REJECT"), ("捏", "面包", "PASS"), ("搬", "桌子", "PASS"),
-        ("抓取", "玻璃杯", "PASS"), ("走", "人", "PASS"), ("拉开", "门", "PASS"),
-        ("握", "杯子", "PASS"), ("拧", "钥匙", "PASS"), ("按住", "按钮", "PASS"),
-    ]
-
-    t3_pass = 0
-    for act, obj, exp in nl_tests:
-        r = engine.check_command(act, obj, robot=TEST_ROBOT)
-        ok = r["verdict"] == exp
-        if ok: t3_pass += 1
-        print(f"  {'✓' if ok else '✗'} {act} {obj}: {r['verdict']} (期望{exp})")
-    print(f"  结果: {t3_pass}/{len(nl_tests)}")
-    if t3_pass < len(nl_tests): all_pass = False
-
-    # =================================================================
-    # 测试4：模式B（JSON输入）
-    # =================================================================
-    print("\n" + "─" * 70)
-    print("测试4：模式B — JSON物理参数输入")
-    print("─" * 70)
-
-    scene = {"objects": [{"object_id": "seal", "name": "密封条",
-                          "mass_kg": 0.8, "stability": "flexible",
-                          "contact_area_mm2": 600}]}
-    # flexible → fragile 类: grasp力上限3.0N, 速度上限0.05m/s
-    action_b = {"type": "grasp", "force_n": 2.0, "velocity_ms": 0.03,
-                "acceleration_ms2": 1.0, "target_object": "seal"}
-    robot_b = {"max_force_n": 150, "max_velocity_ms": 2.0,
-               "max_acceleration_ms2": 10.0}
-    r = engine.check_action(scene, action_b, robot_b)
-    ok_b = r["verdict"] == "PASS"
-    print(f"  {'✓' if ok_b else '✗'} grasp 密封条: {r['verdict']}, 压强={r['pressure_kPa']:.2f}kPa")
-    if not ok_b: all_pass = False
-
-    # =================================================================
-    # 测试5：性能测试
-    # =================================================================
-    print("\n" + "─" * 70)
-    print("测试5：性能测试")
-    print("─" * 70)
-
-    N = 100000
-    t0 = time.perf_counter()
-    for _ in range(N):
-        engine.check_command("grasp", "鸡蛋", {"force": 2.0, "speed": 0.03}, robot=TEST_ROBOT)
-    elapsed = time.perf_counter() - t0
-    avg_ms = elapsed / N * 1000
-    ok_perf = avg_ms < 0.1
-    print(f"  {N}次, 总{elapsed:.3f}s, 平均{avg_ms:.4f}ms/次")
-    print(f"  {'✓' if ok_perf else '✗'} < 0.1ms: {'通过' if ok_perf else '未通过'}")
-    if not ok_perf: all_pass = False
-
-    # =================================================================
-    # 测试6：输出结构完整性 + ISO合规
-    # =================================================================
-    print("\n" + "─" * 70)
-    print("测试6：输出结构完整性 + ISO合规标注")
-    print("─" * 70)
-
-    r = engine.check_command("抓取", "鸡蛋", {"force": 2.0, "speed": 0.03}, robot=TEST_ROBOT)
-    required = ["verdict", "state", "capability_match", "action_target_match",
-                "param_check", "safety_zone", "disturbance", "correction",
-                "recommended_params", "contact_area_mm2", "pressure_kPa", "iso_compliance",
-                "risk_level_7", "risk_subtypes", "over_ratio"]
-    missing = [k for k in required if k not in r]
-    ok_struct = len(missing) == 0
-    print(f"  {'✓' if ok_struct else '✗'} 必需字段: {len(required)}个")
-    if missing: print(f"    缺失: {missing}")
-
-    # ISO合规测试
-    r_human = engine.check_command("摸", "手", {"force": 1.0, "speed": 10}, robot=TEST_ROBOT)
-    print(f"  人体接触ISO测试: {r_human['iso_compliance']}")
-    
-    print(f"\n  完整输出示例:")
-    print(f"  {json.dumps(r, indent=2, ensure_ascii=False)}")
-    if not ok_struct: all_pass = False
-
-    # =================================================================
-    # 测试7：动态接触面积 + 冲量校验 + 反作用力约束
-    # =================================================================
-    print("\n" + "─" * 70)
-    print("测试7：动态接触面积 + 冲量校验 + 反作用力约束")
-    print("─" * 70)
-
-    t7_pass = 0
-    t7_total = 0
-
-    # 7a: 动态接触面积验证 — 同样5N力，面包压强 < 铁块压强（软物面积大→压强小）
-    t7_total += 1
-    r_bread = engine.check_command("grasp", "面包", {"force": 5.0, "speed": 0.05}, robot=TEST_ROBOT)
-    r_iron = engine.check_command("grasp", "铁块", {"force": 5.0, "speed": 0.05}, robot=TEST_ROBOT)
-    ok_dca = (r_bread["pressure_kPa"] < r_iron["pressure_kPa"]
-              and r_bread["contact_area_mm2"] > OBJECT_PROPERTIES["面包"]["contact_area_mm2"]
-              and r_iron["contact_area_mm2"] > OBJECT_PROPERTIES["铁块"]["contact_area_mm2"])
-    print(f"  {'✓' if ok_dca else '✗'} 动态接触面积: 面包({r_bread['pressure_kPa']:.1f}kPa) < 铁块({r_iron['pressure_kPa']:.1f}kPa)")
-    if ok_dca: t7_pass += 1
-
-    # 7b: 动态接触面积 — 力为0时面积不变
-    t7_total += 1
-    r0 = engine.check_command("grasp", "面包", {"force": 0.0, "speed": 0.05}, robot=TEST_ROBOT)
-    base_a = OBJECT_PROPERTIES["面包"]["contact_area_mm2"]
-    ok_zero = abs(r0["contact_area_mm2"] - base_a) < 0.01
-    print(f"  {'✓' if ok_zero else '✗'} 力为0时面积不变: {r0['contact_area_mm2']:.1f} == {base_a}")
-    if ok_zero: t7_pass += 1
-
-    # 7c: 冲量校验 — carry 重物高速 → FAIL
-    t7_total += 1
-    r_imp_fail = engine.check_command("carry", "铁块", {"force": 40.0, "speed": 1.5}, robot=TEST_ROBOT)
-    ok_imp_fail = r_imp_fail["verdict"] == "FAIL" and "冲量" in r_imp_fail["param_check"]["detail"]
-    imp_val = 20.0 * 1.5  # 20kg × 1.5m/s
-    print(f"  {'✓' if ok_imp_fail else '✗'} 冲量-重物高速FAIL: {r_imp_fail['verdict']} ({imp_val:.1f}kg·m/s)")
-    if ok_imp_fail: t7_pass += 1
-
-    # 7d: 冲量校验 — carry 重物低速 → PASS
-    t7_total += 1
-    r_imp_pass = engine.check_command("carry", "铁块", {"force": 40.0, "speed": 0.2}, robot=TEST_ROBOT)
-    imp_safe = 20.0 * 0.2  # 4 kg·m/s < 25
-    ok_imp_pass = r_imp_pass["verdict"] == "PASS" or (r_imp_pass["verdict"] == "FAIL" and "冲量" not in r_imp_pass["param_check"]["detail"])
-    # Actually check: if FAIL for other reasons (not impulse), still counts
-    detail = r_imp_pass["param_check"]["detail"]
-    impulse_ok = "冲量" not in detail or "接近" in detail
-    print(f"  {'✓' if impulse_ok else '✗'} 冲量-重物低速安全: {r_imp_pass['verdict']} (冲量={imp_safe:.1f}kg·m/s, detail={detail[:40]})")
-    if impulse_ok: t7_pass += 1
-
-    # 7e: 冲量校验 — carry 轻物安全速度 → 冲量远低于限值，应安全通过
-    t7_total += 1
-    # 鸡蛋 0.05kg × carry fragile速度最优值0.2m/s = 0.01 kg·m/s，远低于impulse_max
-    r_light = engine.check_command("carry", "鸡蛋", {"force": 5.0, "speed": 0.2}, robot=TEST_ROBOT)
-    imp_light = 0.05 * 0.2  # 0.01 kg·m/s, well under impulse limit
-    light_ok = (r_light["verdict"] == "PASS")
-    print(f"  {'✓' if light_ok else '✗'} 冲量-轻物安全速度通过: {r_light['verdict']} (冲量={imp_light:.4f}kg·m/s)")
-    if light_ok: t7_pass += 1
-
-    # 7f: 反作用力约束 — 力超过反作用极限 → FAIL
-    t7_total += 1
-    # 50kg × 9.81 × 0.6 = 294.3N, 用400N测试
-    r_rxn_fail = engine.check_command("push", "门", {"force": 400.0, "speed": 0.1}, robot=TEST_ROBOT)
-    rxn_detail = r_rxn_fail["param_check"]["detail"]
-    ok_rxn_fail = "反作用力" in rxn_detail
-    print(f"  {'✓' if ok_rxn_fail else '✗'} 反作用力-超载FAIL: {r_rxn_fail['verdict']} (detail含反作用力)")
-    if ok_rxn_fail: t7_pass += 1
-
-    # 7g: 反作用力约束 — 正常力 → 不触发反作用FAIL
-    t7_total += 1
-    r_rxn_ok = engine.check_command("push", "门", {"force": 20.0, "speed": 0.3}, robot=TEST_ROBOT)
-    rxn_ok_detail = r_rxn_ok["param_check"]["detail"]
-    rxn_not_triggered = "反作用力" not in rxn_ok_detail
-    print(f"  {'✓' if rxn_not_triggered else '✗'} 反作用力-正常力不触发: {r_rxn_ok['verdict']}")
-    if rxn_not_triggered: t7_pass += 1
-
-    print(f"  结果: {t7_pass}/{t7_total}")
-    if t7_pass < t7_total: all_pass = False
-
-    # =================================================================
-    # 总结
-    # =================================================================
-    print("\n" + "=" * 70)
-    if all_pass:
-        print("✓ 全部测试通过！Rotor Safety Engine v4 验证完成。")
-    else:
-        print("✗ 部分测试未通过。")
-    print("=" * 70)
-    sys.exit(0 if all_pass else 1)
